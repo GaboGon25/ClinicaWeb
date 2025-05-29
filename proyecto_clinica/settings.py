@@ -55,7 +55,7 @@ ROOT_URLCONF = 'proyecto_clinica.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates/JyGDreams'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
