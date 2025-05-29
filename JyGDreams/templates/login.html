@@ -9,6 +9,11 @@
   <link rel="stylesheet" href="{% static 'JyGDreams/login.css' %}">
 </head>
 <body>
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
 
   <div class="login-wrapper text-center">
     <img src="https://cdn-icons-png.flaticon.com/512/823/823233.png" alt="Logo Clínica" class="logo">
