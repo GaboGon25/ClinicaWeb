@@ -27,7 +27,7 @@
 
       <div class="collapse navbar-collapse justify-content-end" id="navbarContent">
         <ul class="navbar-nav align-items-center mb-2 mb-lg-0">
-          <li class="nav-item"><a class="nav-link" href="#">Pacientes</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'tabla_paciente' %}">Pacientes</a></li>
             <li class="nav-item"><a class="nav-link" href="#">Expedientes</a></li>
           <li class="nav-item"><a class="nav-link" href="#">Citas</a></li>
           <li class="nav-item"><a class="nav-link" href="#">Pagos</a></li>
@@ -42,5 +42,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  {% block extra_js %}{% endblock %}
 </body>
 </html>
