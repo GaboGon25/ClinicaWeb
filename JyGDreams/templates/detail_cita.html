@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block title %}Detalle de Cita - JyGDreams{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'JyGDreams/add_cita.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+    <h2><i class="bi bi-calendar-check me-2"></i>Detalle de Cita de {X}</h2>
+    <a href="{% url 'cuadros_citas' %}" class="btn btn-primary">
+      <i class="bi bi-table"></i> Ver Citas
+    </a>
+  </div>
+
+  <div id="formDetalleCita" class="form-container">
+    <form>
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <label class="form-label">Procedimiento</label>
+          <input type="text" class="form-control" value="Limpieza" disabled>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Valor</label>
+          <input type="text" class="form-control" value="500" disabled>
+        </div>
+      </div>
+
+      {% if cita.procedimiento2 %}
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <label class="form-label">Segundo Procedimiento</label>
+          <input type="text" class="form-control" value="Botox" disabled>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Valor</label>
+          <input type="text" class="form-control" value="1000" disabled>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="row mb-4">
+        <div class="col-md-4">
+          <label class="form-label">Hora</label>
+          <input type="time" class="form-control" value="a las 5" disabled>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Fecha</label>
+          <input type="date" class="form-control" value="Hoy" disabled>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Estado</label>
+          <input type="text" class="form-control" value="listo" disabled>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label">Motivo</label>
+        <textarea class="form-control" rows="3" disabled>si</textarea>
+      </div>
+
+      <div class="d-grid">
+        <a href="{% url 'editar_cita' %}" class="btn btn-warning">
+          <i class="bi bi-pencil-square"></i> Editar Cita
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block content %}
-<h1 class="text-center mb-5 title-dashboard">Panel de Control Médico</h1>
+<h1 class="text-center mb-5 title-dashboard">Panel de Control Clinico</h1>
 
 <div class="cards-container">
     <!-- Pacientes -->
@@ -26,7 +26,7 @@
         <div class="card-body">
             <i class="bi bi-folder-fill icon"></i>
             <h5 class="card-title">Expedientes</h5>
-            <p class="card-text">Accede a los historiales médicos y documentos importantes.</p>
+            <p class="card-text">Accede a el historial medico del paciente</p>
             <a href="#" class="btn btn-emerald">Ver Expedientes</a>
         </div>
     </div>
@@ -36,19 +36,19 @@
         <div class="card-body">
             <i class="bi bi-calendar-check-fill icon"></i>
             <h5 class="card-title">Citas</h5>
-            <p class="card-text">Administra las citas médicas y agenda nuevas consultas.</p>
-            <a href="#" class="btn btn-emerald">Ver Citas</a>
+            <p class="card-text">Administra las citas de pacientes y gestiona sus respectivos pagos</p>
+            <a href="{% url 'cita_pacientes' %}" class="btn btn-emerald">Ver Citas</a>
         </div>
     </div>
 
     <!-- Pagos -->
-    <div class="card card-action">
+    <!-- <div class="card card-action">
         <div class="card-body">
             <i class="bi bi-credit-card-fill icon"></i>
             <h5 class="card-title">Pagos</h5>
             <p class="card-text">Revisa y gestiona los pagos y facturas del sistema.</p>
             <a href="#" class="btn btn-emerald">Gestionar Pagos</a>
         </div>
-    </div>
+    </div> -->
 </div>
 {% endblock %}

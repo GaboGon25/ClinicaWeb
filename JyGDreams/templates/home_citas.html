@@ -1,0 +1,121 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'JYGDreams/home_citas.css' %}">
+
+<div class="container mt-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">Citas Registradas de {X}</h2>
+    <a href="{% url 'agregar_cita' %}" class="btn btn-primary shadow-sm rounded-pill px-4">Registrar Citas</a>
+  </div>
+
+  <div class="row g-4">
+    <!-- Card: Agendado -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="modern-card border-left-agendado card-link position-relative" data-href="{% url 'detalle_cita' %}">
+        <div class="card-body">
+          <h5 class="card-title">Botox Facial</h5>
+          <p class="card-text mb-1"><strong>Fecha:</strong> 01/06/2025</p>
+          <p class="card-text mb-1"><strong>Hora:</strong> 13:30</p>
+          <span class="status-badge bg-agendado">Agendado</span>
+        </div>
+        <div class="dropdown position-absolute bottom-0 end-0 m-3">
+          <button class="btn btn-light btn-pay dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-currency-dollar"></i>
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#"><i class="bi bi-currency-dollar me-2 text-primary"></i>Registrar Pago</a></li>
+            <li><a class="dropdown-item" href="#"><i class="bi bi-pencil-square me-2 text-warning"></i>Editar Pago</a></li>
+            <li><a class="dropdown-item" href="#"><i class="bi bi-eye me-2 text-secondary"></i>Detalle de Pago</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card: Reprogramado -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="modern-card border-left-reprogramado card-link position-relative" data-href="#">
+        <div class="card-body">
+          <h5 class="card-title">Peeling Químico</h5>
+          <p class="card-text mb-1"><strong>Fecha:</strong> 05/06/2025</p>
+          <span class="status-badge bg-reprogramado">Reprogramado</span>
+        </div>
+        <div class="dropdown position-absolute bottom-0 end-0 m-3">
+          <button class="btn btn-light btn-pay dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-currency-dollar"></i>
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#"><i class="bi bi-currency-dollar me-2 text-primary"></i>Registrar Pago</a></li>
+            <li><a class="dropdown-item" href="#"><i class="bi bi-pencil-square me-2 text-warning"></i>Editar Pago</a></li>
+            <li><a class="dropdown-item" href="#"><i class="bi bi-eye me-2 text-secondary"></i>Detalle de Pago</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card: Realizado -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="modern-card border-left-realizado card-link position-relative" data-href="#">
+        <div class="card-body">
+          <h5 class="card-title">Relleno de labios</h5>
+          <p class="card-text mb-1"><strong>Fecha:</strong> 03/06/2025</p>
+          <span class="status-badge bg-realizado">Realizado</span>
+        </div>
+        <div class="dropdown position-absolute bottom-0 end-0 m-3">
+          <button class="btn btn-light btn-pay dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-currency-dollar"></i>
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#"><i class="bi bi-currency-dollar me-2 text-primary"></i>Registrar Pago</a></li>
+            <li><a class="dropdown-item" href="#"><i class="bi bi-pencil-square me-2 text-warning"></i>Editar Pago</a></li>
+            <li><a class="dropdown-item" href="#"><i class="bi bi-eye me-2 text-secondary"></i>Detalle de Pago</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card: No Llego -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="modern-card border-left-no-llego card-link position-relative" data-href="#">
+        <div class="card-body">
+          <h5 class="card-title">Limpieza Facial</h5>
+          <p class="card-text mb-1"><strong>Fecha:</strong> 02/06/2025</p>
+          <span class="status-badge bg-no-llego">No Llegó</span>
+        </div>
+        <div class="dropdown position-absolute bottom-0 end-0 m-3">
+          <button class="btn btn-light btn-pay dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-currency-dollar"></i>
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#"><i class="bi bi-currency-dollar me-2 text-primary"></i>Registrar Pago</a></li>
+            <li><a class="dropdown-item" href="#"><i class="bi bi-pencil-square me-2 text-warning"></i>Editar Pago</a></li>
+            <li><a class="dropdown-item" href="#"><i class="bi bi-eye me-2 text-secondary"></i>Detalle de Pago</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll('.card-link').forEach(function (card) {
+      card.addEventListener('click', function (e) {
+        if (
+          e.target.closest('.dropdown') ||
+          e.target.tagName === 'BUTTON' ||
+          e.target.tagName === 'I' ||
+          e.target.classList.contains('dropdown-item')
+        ) {
+          return;
+        }
+        const href = this.dataset.href;
+        if (href) window.location.href = href;
+      });
+    });
+  });
+</script>
+{% endblock %}

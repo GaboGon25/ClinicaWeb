@@ -22,6 +22,12 @@ def login_view(request):
 def index(request):
     return render(request, 'index.html')
 
+def logout_view(request):
+    from django.contrib.auth import logout
+    logout(request)
+    messages.success(request, 'Has cerrado sesión correctamente.')
+    return redirect('login')  # Redirige al login después de cerrar sesión
+
 
 def agregar_paciente(request):
     if request.method == "POST":
@@ -76,6 +82,23 @@ def editar_paciente(request, paciente_id):
         messages.success(request, 'Datos del paciente actualizados correctamente.')
         return redirect('tabla_paciente')
     return render(request, 'edit_patient.html', {'paciente': paciente})
+
+def cita_pacientes(request):
+    pacientes = Paciente.objects.all()
+    return render(request, 'cards_patient.html', {'pacientes': pacientes})
+
+def cuadros_citas(request):
+    return render(request, 'home_citas.html')
+
+def agregar_cita(request):
+    return render(request, 'add_cita.html')
+
+def editar_cita(request):
+    return render(request, 'edit_cita.html')
+
+def detalle_cita(request):
+    return render(request, 'detail_cita.html')
+
 
 
 

@@ -1,10 +1,16 @@
-body {
-    background: #f0f4f8;
-    font-family: 'Segoe UI', sans-serif;
-    margin: 0;
-    padding: 0;
-    font-size: 17px;
+:root {
+    --emerald-green: #2ecc71;
+    --emerald-dark: #27ae60;
+    --emerald-light: #a3e4d7;
 }
+
+body {
+    background: linear-gradient(135deg, #d1f2eb, #a3e4d7);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+    padding: 3rem 1rem;
+}
+
 
 .pacientes-container {
     max-width: 1300px;
