@@ -77,7 +77,12 @@
     color: #198754;
 }
 
-.bg-no-llego {
+/*.bg-no-llego {
+    background-color: #f5c6cb;
+    color: #dc3545;
+}*/
+
+.bg-inasistencia {
     background-color: #f5c6cb;
     color: #dc3545;
 }
@@ -95,8 +100,12 @@
     border-left-color: #198754;
 }
 
-.border-left-no-llego {
+/*.border-left-no-llego {
     border-left-color: #dc3545;
+}*/
+
+.border-left-inasistencia {
+    border-left-color: #dc3545 !important;
 }
 
 :root {

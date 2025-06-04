@@ -3,7 +3,12 @@
 
 {% block title %}Agregar Cita - JyGDreams{% endblock %}
 {% block extra_js %}
+{{ procedimientos_dict|json_script:"procedimientos-data" }}
 <script src="{% static 'JyGDreams/validar_cita.js' %}"></script>
+<script>
+    window.procedimientos_dict = JSON.parse(document.getElementById('procedimientos-data').textContent);
+</script>
+<script src="{% static 'JyGDreams/cargar_valor_procedimiento.js' %}"></script>
 {% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'JyGDreams/add_cita.css' %}">
@@ -12,8 +17,8 @@
 {% block content %}
 <div class="container py-5">
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
-    <h2><i class="bi bi-calendar-plus me-2"></i>Agregando Cita de {X}</h2>
-    <a href="{% url 'cuadros_citas' %}" class="btn btn-primary">
+    <h2><i class="bi bi-calendar-plus me-2"></i>Agregando Cita de {{ paciente.nombre }} {{ paciente.apellido }}</h2>
+    <a href="{% url 'home_citas' paciente.id %}" class="btn btn-primary">
       <i class="bi bi-table"></i> Ver Citas
     </a>
   </div>
@@ -25,15 +30,17 @@
       <div class="row mb-4">
         <div class="col-md-6">
           <label class="form-label">Procedimiento</label>
-          <select class="form-select" name="procedimiento1" required>
+          <select class="form-select" name="procedimiento1" id="procedimiento1" required>
             <option value="" disabled selected>Seleccione un procedimiento</option>
-            <option value="Dermapen">Dermapen</option>
+            {% for procedimiento in procedimientos %}
+              <option value="{{ procedimiento.id }}">{{ procedimiento.titulo }}</option>
+            {% endfor %}
             <!-- Agrega más opciones aquí -->
           </select>
         </div>
         <div class="col-md-6">
           <label class="form-label">Valor</label>
-          <input type="text" class="form-control" name="valor1" value="40,00" required>
+          <input type="text" class="form-control" name="valor1" id="valor1" value="" readonly required>
         </div>
       </div>
 
@@ -47,14 +54,17 @@
       <div class="row mb-4" id="otroProcedimiento" style="display: none;">
         <div class="col-md-6">
           <label class="form-label">Procedimiento</label>
-          <select class="form-select" name="procedimiento2" disabled>
-            <option value="Dermapen">Dermapen</option>
+          <select class="form-select" name="procedimiento2" id="procedimiento2" disabled>
+            <option value="" disabled selected>Seleccione un procedimiento</option>
+            {% for procedimiento in procedimientos %}
+              <option value="{{ procedimiento.id }}">{{ procedimiento.titulo }}</option>
+            {% endfor %}
             <!-- Agrega más opciones aquí -->
           </select>
         </div>
         <div class="col-md-6">
           <label class="form-label">Valor</label>
-          <input type="text" class="form-control" name="valor2" value="40,00" disabled>
+          <input type="text" class="form-control" name="valor2" id="valor2" value="" readonly disabled>
         </div>
       </div>
 
@@ -70,9 +80,10 @@
         <div class="col-md-4">
           <label class="form-label">Estado</label>
           <select class="form-select" name="estado" required>
-            <option value="Activo" selected>Activo</option>
-            <option value="Cancelado">Cancelado</option>
-            <option value="Completado">Completado</option>
+            <option value="AGENDADO" selected>Agendado</option>
+            <option value="REPROGRAMADO">Reprogramado</option>
+            <option value="REALIZADO">Realizado</option>
+            <option value="INASISTENCIA">Inasistencia</option>
           </select>
         </div>
       </div>

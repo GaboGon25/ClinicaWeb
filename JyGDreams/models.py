@@ -19,7 +19,9 @@ class Cita(models.Model):
         ('AGENDADO', 'Agendado'),
         ('REPROGRAMADO', 'Reprogramado'),
         ('REALIZADO', 'Realizado'),
+        ('INASISTENCIA', 'Inasistencia'),  # Nueva opción agregada
     ]
+    procedimientos = models.ManyToManyField('Procedimiento', through='CitaProcedimiento')
     paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE)
     fecha = models.DateField()
     hora = models.TimeField()
@@ -46,3 +48,10 @@ class Procedimiento(models.Model):
 
     def __str__(self):
         return self.titulo
+
+class CitaProcedimiento(models.Model):
+    cita = models.ForeignKey('Cita', on_delete=models.CASCADE)
+    procedimiento = models.ForeignKey('Procedimiento', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.cita} - {self.procedimiento}"

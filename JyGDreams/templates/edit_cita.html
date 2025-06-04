@@ -1,9 +1,11 @@
 {% extends "layout.html" %}
 {% load static %}
+{% load dict_get %}
 
 {% block title %}Editar Cita - JyGDreams{% endblock %}
 {% block extra_js %}
-<script src="{% static 'JyGDreams/validar_cita.js' %}"></script>
+{{ procedimientos_dict|json_script:"procedimientos-data" }}
+<script src="{% static 'JyGDreams/cargar_valor_procedimiento.js' %}"></script>
 {% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'JyGDreams/add_cita.css' %}">
@@ -12,78 +14,82 @@
 {% block content %}
 <div class="container py-5">
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
-    <h2><i class="bi bi-calendar-plus me-2"></i>Editando Cita de {X}</h2>
-    <a href="{% url 'cuadros_citas' %}" class="btn btn-primary">
+    <h2><i class="bi bi-calendar-plus me-2"></i>Editando Cita de {{ cita.paciente.nombre }} {{ cita.paciente.apellido }}</h2>
+    <a href="{% url 'home_citas' cita.paciente.id %}" class="btn btn-primary">
       <i class="bi bi-table"></i> Ver Citas
     </a>
   </div>
 
-  <div id="formAgregarCita" class="form-container">
+  <div id="formEditarCita" class="form-container">
     <form method="post">
       {% csrf_token %}
 
       <div class="row mb-4">
         <div class="col-md-6">
           <label class="form-label">Procedimiento</label>
-          <select class="form-select" name="procedimiento1" required>
-            <option value="" disabled selected>Seleccione un procedimiento</option>
-            <option value="Dermapen">Dermapen</option>
-            <!-- Agrega más opciones aquí -->
+          <select class="form-select" name="procedimiento1" id="procedimiento1" required>
+            <option value="" disabled>Seleccione un procedimiento</option>
+            {% for procedimiento in procedimientos %}
+              <option value="{{ procedimiento.id }}" {% if proc1 == procedimiento.id %}selected{% endif %}>{{ procedimiento.titulo }}</option>
+            {% endfor %}
           </select>
         </div>
         <div class="col-md-6">
           <label class="form-label">Valor</label>
-          <input type="text" class="form-control" name="valor1" value="40,00" required>
+          <input type="text" class="form-control" id="valor1" value="{% if proc1 %}{{ procedimientos_dict|dict_get:proc1 }}{% endif %}" disabled>
         </div>
       </div>
 
       <div class="form-check mb-3">
-        <input class="form-check-input" type="checkbox" id="agregarOtroProcedimiento" name="agregar_otro">
+        <input class="form-check-input" type="checkbox" id="agregarOtroProcedimiento" name="agregar_otro" {% if proc2 %}checked{% endif %}>
         <label class="form-check-label" for="agregarOtroProcedimiento">
           Agregar otro procedimiento
         </label>
       </div>
 
-      <div class="row mb-4" id="otroProcedimiento" style="display: none;">
+      <div class="row mb-4" id="otroProcedimiento" {% if not proc2 %}style="display: none;"{% endif %}>
         <div class="col-md-6">
           <label class="form-label">Procedimiento</label>
-          <select class="form-select" name="procedimiento2" disabled>
-            <option value="Dermapen">Dermapen</option>
-            <!-- Agrega más opciones aquí -->
+          <select class="form-select" name="procedimiento2" id="procedimiento2" {% if not proc2 %}disabled{% endif %}>
+            <option value="" disabled>Seleccione un procedimiento</option>
+            {% for procedimiento in procedimientos %}
+              <option value="{{ procedimiento.id }}" {% if proc2 == procedimiento.id %}selected{% endif %}>{{ procedimiento.titulo }}</option>
+            {% endfor %}
           </select>
         </div>
         <div class="col-md-6">
           <label class="form-label">Valor</label>
-          <input type="text" class="form-control" name="valor2" value="40,00" disabled>
+          <input type="text" class="form-control" id="valor2" value="{% if proc2 %}{{ procedimientos_dict|dict_get:proc2 }}{% endif %}" disabled>
         </div>
       </div>
 
       <div class="row mb-4">
         <div class="col-md-4">
           <label class="form-label">Hora</label>
-          <input type="time" class="form-control" name="hora" required>
+          <input type="time" class="form-control" name="hora" value="{{ cita.hora|time:'H:i' }}" required>
         </div>
         <div class="col-md-4">
           <label class="form-label">Fecha</label>
-          <input type="date" class="form-control" name="fecha" required>
+          <input type="date" class="form-control" name="fecha" value="{{ cita.fecha|date:'Y-m-d' }}" required>
         </div>
         <div class="col-md-4">
           <label class="form-label">Estado</label>
           <select class="form-select" name="estado" required>
-            <option value="Activo" selected>Activo</option>
-            <option value="Cancelado">Cancelado</option>
-            <option value="Completado">Completado</option>
+            <option value="AGENDADO" {% if cita.estado == 'AGENDADO' %}selected{% endif %}>Agendado</option>
+            <option value="REPROGRAMADO" {% if cita.estado == 'REPROGRAMADO' %}selected{% endif %}>Reprogramado</option>
+            <option value="REALIZADO" {% if cita.estado == 'REALIZADO' %}selected{% endif %}>Realizado</option>
+            <option value="INASISTENCIA" {% if cita.estado == 'INASISTENCIA' %}selected{% endif %}>Inasistencia</option>
           </select>
         </div>
       </div>
 
       <div class="mb-4">
         <label class="form-label">Motivo</label>
-        <textarea class="form-control" name="motivo" rows="3" placeholder="Escriba el motivo de la cita..."></textarea>
+        <textarea class="form-control" name="motivo" rows="3" required>{{ cita.motivo_cita }}</textarea>
       </div>
 
       <div class="d-grid">
-        <button class="btn btn-warning" type="submit" id="btnAgregar">
+        <button class="btn btn-warning" type="submit">
           <i class="bi bi-plus-circle"></i> Guardar Cambios
         </button>
       </div>
