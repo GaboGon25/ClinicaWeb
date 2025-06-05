@@ -1,26 +1,23 @@
 {
     "version": 2,
     "builds": [
-        {
-            "src": "proyecto_clinica/wsgi.py",
-            "config": {
-                "maxLambdaSize": "15mb",
-                "runtime": "python3.9"
-            }
+      {
+        "src": "proyecto_clinica/wsgi.py",
+        "use": "@vercel/python",
+        "config": {
+          "runtime": "python3.9",
+          "maxLambdaSize": "15mb"
         }
+      },
+      {
+        "src": "build_files.sh",
+        "use": "@vercel/static-build",
+        "config": { "distDir": "staticfiles" }
+      }
     ],
     "routes": [
-        {
-            "src": "/static/(.*)",
-            "dest": "/static/$1"
-        },
-        {
-            "src": "/admin/(.*)",
-            "dest": "proyecto_clinica/wsgi.py"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "proyecto_clinica/wsgi.py"
-        }
+      { "src": "/static/(.*)", "dest": "/static/$1" },
+      { "src": "/(.*)",        "dest": "proyecto_clinica/wsgi.py" }
     ]
-}
+  }
+  
