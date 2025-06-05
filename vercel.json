@@ -4,6 +4,7 @@
         {
             "src": "proyecto_clinica/wsgi.py",
             "use": "@vercel/python"
+            
         }
     ],
     "routes": [
