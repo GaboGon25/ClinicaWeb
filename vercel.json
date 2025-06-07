@@ -9,11 +9,15 @@
           "maxLambdaSize": "15mb",
           "buildCommand": "pip install -r requirements.txt && python manage.py collectstatic --noinput"
         }
+      },
+      {
+        "src": "staticfiles/**",
+        "use": "@vercel/static"
       }
     ],
     "routes": [
-      { "src": "/static/(.*)", "dest": "/static/$1" },
-      { "src": "/(.*)",        "dest": "proyecto_clinica/wsgi.py" }
+      { "src": "/static/(.*)", "dest": "/staticfiles/$1" },
+      { "src": "/(.*)", "dest": "proyecto_clinica/wsgi.py" }
     ]
-  }
+}
   
