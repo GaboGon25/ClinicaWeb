@@ -1,0 +1,77 @@
+:root {
+    --emerald-green: #2ecc71;
+    --emerald-dark: #27ae60;
+    --emerald-light: #a3e4d7;
+}
+
+body {
+    background: linear-gradient(135deg, #d1f2eb, #a3e4d7);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+    padding: 3rem 1rem;
+}
+
+.title-dashboard {
+    color: var(--emerald-dark);
+    font-weight: 700;
+}
+
+.card-action {
+    border-radius: 1rem;
+    box-shadow: 0 8px 15px rgba(46, 204, 113, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    background-color: white;
+    border: none;
+}
+
+.card-action:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 25px rgba(46, 204, 113, 0.4);
+}
+
+.card-action .card-body {
+    text-align: center;
+    color: var(--emerald-dark);
+}
+
+.card-action .card-title {
+    font-weight: 700;
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.card-action .card-text {
+    color: #555;
+    font-size: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.btn-emerald {
+    background-color: var(--emerald-green);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 0.5rem 1.5rem;
+    border-radius: 50px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-emerald:hover {
+    background-color: var(--emerald-dark);
+}
+
+.icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--emerald-green);
+}
+
+/* Responsive Grid */
+.cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}

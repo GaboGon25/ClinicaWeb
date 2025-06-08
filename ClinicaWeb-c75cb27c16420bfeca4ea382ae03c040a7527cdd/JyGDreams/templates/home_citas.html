@@ -1,0 +1,73 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'JYGDreams/home_citas.css' %}">
+
+<div class="container mt-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">Citas Registradas de {{ paciente.nombre }} {{ paciente.apellido }}</h2>
+    <a href="{% url 'agregar_cita' paciente.id %}" class="btn btn-primary shadow-sm rounded-pill px-4">
+      <i class="bi bi-calendar-plus"></i> Registrar Cita
+    </a>
+  </div>
+
+  <div class="row g-4">
+    {% if citas %}
+      {% for cita in citas %}
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="modern-card border-left-{{ cita.estado|lower }} card-link position-relative" data-href="{% url 'detalle_cita' cita.id %}">
+            <div class="card-body">
+              <h5 class="card-title">
+                {% for proc in cita.procedimientos.all %}
+                  {{ proc.titulo }}{% if not forloop.last %}, {% endif %}
+                {% empty %}
+                  Sin procedimiento
+                {% endfor %}
+              </h5>
+              <p class="card-text mb-1"><strong>Fecha:</strong> {{ cita.fecha|date:"d/m/Y" }}</p>
+              <p class="card-text mb-1"><strong>Hora:</strong> {{ cita.hora|time:"H:i" }}</p>
+              <span class="status-badge bg-{{ cita.estado|lower }}">{{ cita.get_estado_display }}</span>
+            </div>
+            <div class="dropdown position-absolute bottom-0 end-0 m-3">
+              <button class="btn btn-light btn-pay dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-currency-dollar"></i>
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#"><i class="bi bi-currency-dollar me-2 text-primary"></i>Registrar Pago</a></li>
+                <li><a class="dropdown-item" href="#"><i class="bi bi-pencil-square me-2 text-warning"></i>Editar Pago</a></li>
+                <li><a class="dropdown-item" href="#"><i class="bi bi-eye me-2 text-secondary"></i>Detalle de Pago</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="col-12">
+        <div class="alert alert-info text-center">No hay citas registradas para este paciente.</div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll('.card-link').forEach(function (card) {
+      card.addEventListener('click', function (e) {
+        if (
+          e.target.closest('.dropdown') ||
+          e.target.tagName === 'BUTTON' ||
+          e.target.tagName === 'I' ||
+          e.target.classList.contains('dropdown-item')
+        ) {
+          return;
+        }
+        const href = this.dataset.href;
+        if (href) window.location.href = href;
+      });
+    });
+  });
+</script>
+{% endblock %}
