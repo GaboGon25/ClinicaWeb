@@ -187,4 +187,14 @@ def home_citas(request, paciente_id):
         'citas': citas,
     })
 
+
+def agregar_pago(request):
+    return render(request, 'add_pago.html')
+
+def editar_pago(request):
+    return render(request, 'edit_pago.html')
+
+def detalle_pago(request):
+    return render(request, 'detail_pago.html')
+
 # Create your views here.

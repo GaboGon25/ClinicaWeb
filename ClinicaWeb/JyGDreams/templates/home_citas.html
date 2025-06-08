@@ -34,9 +34,9 @@
                 <i class="bi bi-currency-dollar"></i>
               </button>
               <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#"><i class="bi bi-currency-dollar me-2 text-primary"></i>Registrar Pago</a></li>
-                <li><a class="dropdown-item" href="#"><i class="bi bi-pencil-square me-2 text-warning"></i>Editar Pago</a></li>
-                <li><a class="dropdown-item" href="#"><i class="bi bi-eye me-2 text-secondary"></i>Detalle de Pago</a></li>
+                <li><a class="dropdown-item" href="{% url 'agregar_pago' %}"><i class="bi bi-currency-dollar me-2 text-primary"></i>Registrar Pago</a></li>
+                
+                <li><a class="dropdown-item" href="{% url 'detalle_pago'%}"><i class="bi bi-eye me-2 text-secondary"></i>Detalle de Pago</a></li>
               </ul>
             </div>
           </div>

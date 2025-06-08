@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block title %}Editar Pago - JyGDreams{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'JyGDreams/add_cita.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h2 class="mb-4"><i class="bi bi-pencil-square me-2"></i>Editar Pago de Cita de {X}</h2>
+
+  <div class="card p-4 shadow-sm">
+    <form method="post">
+      {% csrf_token %}
+      
+      <!-- Procedimiento 1 -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Procedimiento</label>
+          <input type="text" class="form-control" name="procedimiento1" value="Limpieza Facial">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Valor</label>
+          <input type="number" step="0.01" class="form-control" name="valor1" value="25.00">
+        </div>
+      </div>
+
+      <!-- Procedimiento 2 -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Procedimiento</label>
+          <input type="text" class="form-control" name="procedimiento2" value="Depilación Láser">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Valor</label>
+          <input type="number" step="0.01" class="form-control" name="valor2" value="40.00">
+        </div>
+      </div>
+
+      <!-- Procedimiento 3 -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Procedimiento</label>
+          <input type="text" class="form-control" name="procedimiento3" value="Masaje Relajante">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Valor</label>
+          <input type="number" step="0.01" class="form-control" name="valor3" value="35.00">
+        </div>
+      </div>
+
+      <!-- Monto Final -->
+      <div class="row mt-4 mb-3">
+        <div class="col-md-6 offset-md-6">
+          <div class="d-flex justify-content-between align-items-center">
+            <strong class="fs-5">Monto Final:</strong>
+            <input type="text" class="form-control text-success fw-bold text-end" name="monto_final" value="$100.00" readonly>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botón Actualizar -->
+      <div class="d-grid mt-3">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-arrow-repeat me-2"></i>Actualizar Pago
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
