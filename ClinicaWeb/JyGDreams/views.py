@@ -13,7 +13,7 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            # messages.success(request, 'Inicio de sesión exitoso')
+            messages.success(request, 'Inicio de sesión exitoso')
             return redirect('index')  # Cambia 'home' por el nombre de tu vista principal
         else:
             messages.error(request, 'Usuario o contraseña incorrectos')
