@@ -2,7 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.http import HttpResponse
-from .models import Paciente, Cita, Procedimiento, CitaProcedimiento
+from .models import Paciente, Cita, Procedimiento, CitaProcedimiento, Pago
+from django.utils import timezone
 
 #def login(request):
     #return render(request, 'login.html')
@@ -188,8 +189,32 @@ def home_citas(request, paciente_id):
     })
 
 
-def agregar_pago(request):
-    return render(request, 'add_pago.html')
+def agregar_pago(request, cita_id):
+    cita = get_object_or_404(Cita, id=cita_id)
+    # Verifica si ya existe un pago para esta cita
+    if Pago.objects.filter(cita=cita).exists():
+        messages.warning(request, "Ya se ha registrado un pago para esta cita.")
+        return redirect('home_citas', paciente_id=cita.paciente.id)
+
+    procedimientos = cita.procedimientos.all()[:2]
+    monto_final = sum([p.costo for p in procedimientos])
+
+    if request.method == 'POST':
+        pago = Pago.objects.create(
+            cita=cita,
+            fecha=timezone.localdate(),
+            total=0
+        )
+        cita.estado = 'REALIZADO'
+        cita.save()
+        messages.success(request, "Pago registrado exitosamente.")
+        return redirect('home_citas', paciente_id=cita.paciente.id)
+
+    return render(request, 'add_pago.html', {
+        'cita': cita,
+        'procedimientos': procedimientos,
+        'monto_final': monto_final
+    })
 
 def editar_pago(request):
     return render(request, 'edit_pago.html')

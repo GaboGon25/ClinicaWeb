@@ -34,8 +34,19 @@
                 <i class="bi bi-currency-dollar"></i>
               </button>
               <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{% url 'agregar_pago' %}"><i class="bi bi-currency-dollar me-2 text-primary"></i>Registrar Pago</a></li>
-                
+                {% if cita.pago_set.all %}
+                  <li>
+                    <button class="dropdown-item" disabled>
+                    <i class="bi bi-currency-dollar me-2 text-primary"></i>Pago ya registrado
+                    </button>
+                  </li>
+                {% else %}
+                  <li>
+                    <a class="dropdown-item" href="{% url 'agregar_pago' cita.id %}">
+                      <i class="bi bi-currency-dollar me-2 text-primary"></i>Registrar Pago
+                    </a>
+                  </li>
+                {% endif %}
                 <li><a class="dropdown-item" href="{% url 'detalle_pago'%}"><i class="bi bi-eye me-2 text-secondary"></i>Detalle de Pago</a></li>
               </ul>
             </div>

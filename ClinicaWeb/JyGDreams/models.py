@@ -55,3 +55,21 @@ class CitaProcedimiento(models.Model):
 
     def __str__(self):
         return f"{self.cita} - {self.procedimiento}"
+
+class Pago(models.Model):
+    cita = models.ForeignKey(Cita, on_delete=models.CASCADE)
+    fecha = models.DateField()
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def clean(self):
+        if self.total < 0:
+            raise ValidationError("El total no puede ser negativo.")
+
+    def save(self, *args, **kwargs):
+        # Calcula el total sumando el costo de todos los procedimientos de la cita
+        procedimientos = self.cita.procedimientos.all()
+        self.total = sum(p.costo for p in procedimientos)
+        super().save(*args, **kwargs)
+
+    def _str_(self):
+        return f"Pago de {self.total} para {self.cita} el {self.fecha}"
