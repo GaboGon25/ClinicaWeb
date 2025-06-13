@@ -37,8 +37,13 @@
                 {% if cita.pago_set.all %}
                   <li>
                     <button class="dropdown-item" disabled>
-                    <i class="bi bi-currency-dollar me-2 text-primary"></i>Pago ya registrado
+                      <i class="bi bi-currency-dollar me-2 text-primary"></i>Pago ya registrado
                     </button>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="{% url 'detalle_pago' cita.id %}">
+                      <i class="bi bi-eye me-2 text-secondary"></i>Detalle de Pago
+                    </a>
                   </li>
                 {% else %}
                   <li>
@@ -46,8 +51,12 @@
                       <i class="bi bi-currency-dollar me-2 text-primary"></i>Registrar Pago
                     </a>
                   </li>
+                  <li>
+                    <button class="dropdown-item btn-detalle-pago" type="button">
+                      <i class="bi bi-eye me-2 text-secondary"></i>Detalle de Pago
+                    </button>
+                  </li>
                 {% endif %}
-                <li><a class="dropdown-item" href="{% url 'detalle_pago'%}"><i class="bi bi-eye me-2 text-secondary"></i>Detalle de Pago</a></li>
               </ul>
             </div>
           </div>
@@ -73,8 +82,6 @@
 </script>
 {% endif %}
 
-{% endblock %}
-
 {% block extra_js %}
 <script>
   document.addEventListener("DOMContentLoaded", function () {
@@ -92,6 +99,18 @@
         if (href) window.location.href = href;
       });
     });
+
+    // Alerta para Detalle de Pago si no hay pago registrado
+    document.querySelectorAll('.btn-detalle-pago').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Debe registrar el pago antes de ver el detalle.',
+          showConfirmButton: true,
+        });
+      });
+    });
   });
 </script>
+{% endblock %}
 {% endblock %}

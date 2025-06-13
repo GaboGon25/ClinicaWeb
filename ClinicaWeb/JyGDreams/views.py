@@ -219,7 +219,23 @@ def agregar_pago(request, cita_id):
 def editar_pago(request):
     return render(request, 'edit_pago.html')
 
-def detalle_pago(request):
-    return render(request, 'detail_pago.html')
+def detalle_pago(request, cita_id):
+    cita = get_object_or_404(Cita, id=cita_id)
+    pago = Pago.objects.filter(cita=cita).first()
+    if not pago:
+        messages.warning(request, "Primero debe registrar el pago para ver el detalle.")
+        return redirect('home_citas', paciente_id=cita.paciente.id)
+    procedimientos = cita.procedimientos.all()
+    monto_final = sum([p.costo for p in procedimientos])
+    paciente = cita.paciente
+
+    return render(request, 'detail_pago.html', {
+        'cita': cita,
+        'pago': pago,
+        'procedimientos': procedimientos,
+        'monto_final': monto_final,
+        'paciente': paciente,
+    })
+    
 
 # Create your views here.

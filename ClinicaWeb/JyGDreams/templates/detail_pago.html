@@ -10,7 +10,7 @@
 <div class="container py-5">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="text-success">
-      <i class="bi bi-cash-stack me-2"></i>Detalle de Pago de Juan Ramírez
+      <i class="bi bi-cash-stack me-2"></i>Detalle de Pago de {{ paciente }}
     </h2>
     <a href="#" class="btn btn-outline-success">
       <i class="bi bi-wallet2"></i> Ver Pagos
@@ -18,22 +18,24 @@
   </div>
 
   <div class="card shadow p-4">
+    {% for procedimiento in procedimientos %}
     <div class="row mb-3">
       <div class="col-md-6">
         <label class="form-label fw-bold">Procedimiento</label>
-        <input type="text" class="form-control" value="Dermapen" disabled>
+        <input type="text" class="form-control" value="{{ procedimiento.titulo }}" disabled>
       </div>
       <div class="col-md-6">
         <label class="form-label fw-bold">Valor</label>
-        <input type="text" class="form-control" value="40.00" disabled>
+        <input type="text" class="form-control" value="{{ procedimiento.costo }}" disabled>
       </div>
     </div>
+    {% endfor %}
 
     <hr>
 
     <div class="mb-3">
       <label class="form-label fw-bold fs-5 text-success">Monto Final</label>
-      <input type="text" class="form-control text-end fw-bold fs-5 text-success" value="$40.00" disabled>
+      <input type="text" class="form-control text-end fw-bold fs-5 text-success" value="${{ monto_final }}" disabled>
     </div>
 
     <div class="d-grid mt-4">
