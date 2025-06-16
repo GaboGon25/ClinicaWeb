@@ -20,6 +20,6 @@ urlpatterns = [
     path('paciente/<int:paciente_id>/agregar_cita/', views.agregar_cita, name='agregar_cita'),
     path('paciente/<int:paciente_id>/citas/', views.home_citas, name='home_citas'),
     path('cita/<int:cita_id>/pago/', views.agregar_pago, name='agregar_pago'),
-    path('editar_pago/', views.editar_pago, name='editar_pago'),
+    path('editar_pago/<int:cita_id>/', views.editar_pago, name='editar_pago'),
     path('detalle_pago/<int:cita_id>/', views.detalle_pago, name='detalle_pago'),
 ]

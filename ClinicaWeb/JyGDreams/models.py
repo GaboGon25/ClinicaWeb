@@ -71,5 +71,5 @@ class Pago(models.Model):
         self.total = sum(p.costo for p in procedimientos)
         super().save(*args, **kwargs)
 
-    def _str_(self):
+    def __str__(self):
         return f"Pago de {self.total} para {self.cita} el {self.fecha}"

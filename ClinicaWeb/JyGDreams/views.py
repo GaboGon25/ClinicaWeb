@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.http import HttpResponse
 from .models import Paciente, Cita, Procedimiento, CitaProcedimiento, Pago
 from django.utils import timezone
+from django.forms import modelformset_factory
 
 #def login(request):
     #return render(request, 'login.html')
@@ -216,8 +217,33 @@ def agregar_pago(request, cita_id):
         'monto_final': monto_final
     })
 
-def editar_pago(request):
-    return render(request, 'edit_pago.html')
+def editar_pago(request, cita_id):
+    cita = get_object_or_404(Cita, id=cita_id)
+    procedimientos = cita.procedimientos.all()
+    ProcedimientoFormSet = modelformset_factory(Procedimiento, fields=('id', 'costo',), extra=0)
+
+    if request.method == 'POST':
+        formset = ProcedimientoFormSet(request.POST, queryset=procedimientos)
+        if formset.is_valid():
+            formset.save()
+            # Refresca los procedimientos desde la base de datos
+            procedimientos = cita.procedimientos.all()
+            pago = Pago.objects.filter(cita=cita).first()
+            if pago:
+                pago.save()  # Esto recalcula el total
+            messages.success(request, "Pago editado correctamente.")
+            return redirect('detalle_pago', cita_id=cita.id)
+        else:
+            print(formset.errors)
+    else:
+        formset = ProcedimientoFormSet(queryset=procedimientos)
+
+    monto_final = sum([p.costo for p in procedimientos])
+    return render(request, 'edit_pago.html', {
+        'cita': cita,
+        'formset': formset,
+        'monto_final': monto_final,
+    })
 
 def detalle_pago(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id)
