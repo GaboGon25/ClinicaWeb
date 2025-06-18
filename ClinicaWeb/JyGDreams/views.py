@@ -2,11 +2,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.http import HttpResponse
+from django.template.loader import render_to_string
 from django.http import JsonResponse
 from .models import Paciente, Cita, Procedimiento, CitaProcedimiento, Pago
 from django.utils import timezone
 from django.forms import modelformset_factory
-from django.db.models import Q
+from django.db.models import Q, Exists, OuterRef, Subquery
 
 #def login(request):
     #return render(request, 'login.html')
@@ -88,8 +89,44 @@ def editar_paciente(request, paciente_id):
     return render(request, 'edit_patient.html', {'paciente': paciente})
 
 def cita_pacientes(request):
+    query = request.GET.get('q', '')
+    fecha = request.GET.get('fecha', '')
+    orden = request.GET.get('orden', '')
+
     pacientes = Paciente.objects.all()
-    return render(request, 'cards_patient.html', {'pacientes': pacientes})
+
+    if query:
+        pacientes = pacientes.filter(
+            Q(nombre__icontains=query) | Q(apellido__icontains=query)
+        )
+
+    if fecha:
+        pacientes = pacientes.filter(
+            Exists(
+                Cita.objects.filter(
+                    paciente=OuterRef('pk'),
+                    fecha=fecha
+                )
+            )
+        )
+
+    if orden == 'alfabetico':
+        pacientes = pacientes.order_by('nombre', 'apellido')
+    elif orden == 'fecha':
+        pacientes = pacientes.annotate(
+            proxima_cita=Subquery(
+                Cita.objects.filter(paciente=OuterRef('pk')).order_by('fecha').values('fecha')[:1]
+            )
+        ).order_by('proxima_cita')
+
+    return render(request, 'cards_patient.html', {
+        'pacientes': pacientes,
+        'query': query,
+        'fecha': fecha,
+        'orden': orden,
+    })
+    #pacientes = Paciente.objects.all()
+    #return render(request, 'cards_patient.html', {'pacientes': pacientes})
 
 #def cuadros_citas(request):
     #return render(request, 'home_citas.html')
@@ -285,4 +322,37 @@ def ajax_sugerencias_pacientes(request):
     return JsonResponse(list(sugerencias), safe=False)
 
 
+def ajax_filtrar_pacientes(request):
+    query = request.GET.get('q', '')
+    fecha = request.GET.get('fecha', '')
+    orden = request.GET.get('orden', '')
+
+    pacientes = Paciente.objects.all()
+
+    if query:
+        pacientes = pacientes.filter(
+            Q(nombre__icontains=query) | Q(apellido__icontains=query)
+        )
+
+    if fecha:
+        pacientes = pacientes.filter(
+            Exists(
+                Cita.objects.filter(
+                    paciente=OuterRef('pk'),
+                    fecha=fecha
+                )
+            )
+        )
+
+    if orden == 'alfabetico':
+        pacientes = pacientes.order_by('nombre', 'apellido')
+    elif orden == 'fecha':
+        pacientes = pacientes.annotate(
+            proxima_cita=Subquery(
+                Cita.objects.filter(paciente=OuterRef('pk')).order_by('fecha').values('fecha')[:1]
+            )
+        ).order_by('proxima_cita')
+
+    html = render_to_string('partials/cards_pacientes_block.html', {'pacientes': pacientes})
+    return JsonResponse({'html': html})
 # Create your views here.

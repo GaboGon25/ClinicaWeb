@@ -6,6 +6,41 @@
 
 <div class="container py-5">
   <h2 class="text-center mb-5 title"><i class="bi bi-person-fill me-2"></i>Pacientes Registrados</h2>
+
+  <!-- Barra de búsqueda y filtros -->
+  <form method="get" class="mb-4 p-4 rounded shadow-sm search-bar-custom" autocomplete="off" style="max-width:900px; margin:auto;">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-5">
+        <label for="busquedaPaciente" class="form-label mb-1 fw-semibold" style="color:#2c3e50;">Buscar por nombre</label>
+        <div class="input-group">
+          <span class="input-group-text search-icon-bg"><i class="bi bi-search"></i></span>
+          <input type="text" name="q" id="busquedaPaciente" class="form-control border-emerald" placeholder="Nombre o apellido" value="{{ query }}">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <label for="fechaCita" class="form-label mb-1 fw-semibold" style="color:#2c3e50;">Filtrar por fecha de cita</label>
+        <input type="date" name="fecha" id="fechaCita" class="form-control border-emerald" value="{{ fecha }}">
+      </div>
+      <div class="col-md-3">
+        <label for="ordenCita" class="form-label mb-1 fw-semibold" style="color:#2c3e50;">Ordenar</label>
+        <select name="orden" id="ordenCita" class="form-select border-emerald">
+          <option value="">Ordenar por...</option>
+          <option value="alfabetico" {% if orden == 'alfabetico' %}selected{% endif %}>Nombre (A-Z)</option>
+          <option value="fecha" {% if orden == 'fecha' %}selected{% endif %}>Cita más próxima</option>
+        </select>
+      </div>
+      <div class="col-md-1 d-flex align-items-end">
+        <a href="{% url 'cita_pacientes' %}" class="btn btn-outline-emerald w-100" title="Mostrar todos">
+          <i class="bi bi-arrow-clockwise"></i> 
+        </a>
+      </div>
+    </div>
+  </form>
+
+<!--<p>q: {{ query }} | fecha: {{ fecha }} | orden: {{ orden }}</p> -->
+<!--<p>Total pacientes: {{ pacientes|length }}</p> -->
+
+<div id="cards-pacientes-block">
   <div class="row g-4">
     {% for paciente in pacientes %}
       {% cycle 'bg1' 'bg2' 'bg3' 'bg4' 'bg5' as color_class silent %}
@@ -22,4 +57,32 @@
     {% endfor %}
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.querySelector('form');
+  const inputs = form.querySelectorAll('input, select');
+
+  function filtrarAjax() {
+    const params = new URLSearchParams(new FormData(form)).toString();
+    fetch("{% url 'ajax_filtrar_pacientes' %}?" + params)
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('cards-pacientes-block').innerHTML = data.html;
+      });
+  }
+
+  // Ejecutar filtrado al escribir o cambiar cualquier campo
+  inputs.forEach(input => {
+    input.addEventListener('input', filtrarAjax);
+    input.addEventListener('change', filtrarAjax);
+  });
+
+  // Evitar el submit clásico
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    filtrarAjax();
+  });
+});
+</script>
 {% endblock %}

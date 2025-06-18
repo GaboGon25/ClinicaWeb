@@ -80,3 +80,64 @@ body {
   background: linear-gradient(135deg, #84fab0, #8fd3f4); /* menta azul */
   color: #1a2d35;
 }
+
+.search-bar-custom {
+  background: rgba(255,255,255,0.18); /* Fondo translúcido */
+  border: none;
+  border-radius: 1.2rem;
+  box-shadow: 0 4px 24px rgba(44, 62, 80, 0.08);
+  backdrop-filter: blur(12px); /* Efecto cristal */
+  -webkit-backdrop-filter: blur(12px);
+  padding: 2rem 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.input-group-text.search-icon-bg {
+  background: var(--emerald-light);
+  color: var(--emerald-dark);
+  border-right: 0;
+}
+
+/* === INPUTS Y SELECTS INTEGRADOS AL FONDO === */
+.form-control.border-emerald,
+.form-select.border-emerald {
+  background: rgba(255, 255, 255, 0.18); /* Muy transparente */
+  border: none;
+  border-radius: 1rem;
+  color: #2c3e50;
+  font-weight: 500;
+  backdrop-filter: blur(8px); /* Efecto cristal */
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.08);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.form-control.border-emerald::placeholder {
+  color: #2c3e50;
+  opacity: 0.6;
+}
+
+.form-control.border-emerald:focus,
+.form-select.border-emerald:focus {
+  background: rgba(255,255,255,0.28);
+  outline: 2px solid var(--emerald-green);
+  box-shadow: 0 4px 16px rgba(46,204,113,0.10);
+}
+
+.btn-outline-emerald {
+  border: 2px solid var(--emerald-green);
+  color: var(--emerald-green);
+  background: transparent;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-outline-emerald:hover,
+.btn-outline-emerald:focus {
+  background: var(--emerald-green);
+  color: #fff;
+}
+
+@media (min-width: 768px) {
+  .w-md-auto {
+    width: auto !important;
+  }
+}
