@@ -37,24 +37,8 @@
     </div>
   </form>
 
-<!--<p>q: {{ query }} | fecha: {{ fecha }} | orden: {{ orden }}</p> -->
-<!--<p>Total pacientes: {{ pacientes|length }}</p> -->
-
-<div id="cards-pacientes-block">
-  <div class="row g-4">
-    {% for paciente in pacientes %}
-      {% cycle 'bg1' 'bg2' 'bg3' 'bg4' 'bg5' as color_class silent %}
-      <div class="col-sm-12 col-md-6 col-lg-4 d-flex">
-        <a href="{% url 'home_citas' paciente.id %}" class="card-link flex-fill">
-          <div class="paciente-card {{ color_class }} h-100">
-            <div class="card-body d-flex flex-column justify-content-center align-items-start">
-              <h5 class="card-title mb-2">{{ paciente.nombre }} {{ paciente.apellido }}</h5>
-              <p class="card-text"><i class="bi bi-briefcase-fill me-2"></i>{{ paciente.ocupacion }}</p>
-            </div>
-          </div>
-        </a>
-      </div>
-    {% endfor %}
+  <div id="cards-pacientes-block">
+    {% include 'partials/cards_pacientes_block.html' %}
   </div>
 </div>
 
@@ -62,26 +46,43 @@
 document.addEventListener('DOMContentLoaded', function() {
   const form = document.querySelector('form');
   const inputs = form.querySelectorAll('input, select');
+  const cardsBlock = document.getElementById('cards-pacientes-block');
 
-  function filtrarAjax() {
-    const params = new URLSearchParams(new FormData(form)).toString();
-    fetch("{% url 'ajax_filtrar_pacientes' %}?" + params)
+  function filtrarAjax(extraParams = {}) {
+    const params = new URLSearchParams(new FormData(form));
+    // Añade parámetros extra (como page)
+    for (const key in extraParams) {
+      params.set(key, extraParams[key]);
+    }
+    fetch("{% url 'ajax_filtrar_pacientes' %}?" + params.toString())
       .then(response => response.json())
       .then(data => {
-        document.getElementById('cards-pacientes-block').innerHTML = data.html;
+        cardsBlock.innerHTML = data.html;
       });
   }
 
-  // Ejecutar filtrado al escribir o cambiar cualquier campo
+  // Autofiltrado al escribir o cambiar cualquier campo
   inputs.forEach(input => {
-    input.addEventListener('input', filtrarAjax);
-    input.addEventListener('change', filtrarAjax);
+    input.addEventListener('input', () => filtrarAjax());
+    input.addEventListener('change', () => filtrarAjax());
   });
 
   // Evitar el submit clásico
   form.addEventListener('submit', function(e) {
     e.preventDefault();
     filtrarAjax();
+  });
+
+  // Delegación para paginación AJAX
+  cardsBlock.addEventListener('click', function(e) {
+    if (e.target.classList.contains('page-ajax')) {
+      e.preventDefault();
+      const url = new URL(e.target.href, window.location.origin);
+      const page = url.searchParams.get('page');
+      filtrarAjax({page: page});
+      // Scroll al inicio de las cards (opcional)
+      cardsBlock.scrollIntoView({behavior: "smooth"});
+    }
   });
 });
 </script>

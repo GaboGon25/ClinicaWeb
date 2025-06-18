@@ -141,3 +141,35 @@ body {
     width: auto !important;
   }
 }
+
+/* === Diseño para cuadro de pasar de pagina (paginacion) === */
+.pagination .page-link {
+  color: var(--emerald-green, #2ecc71);
+  background: rgba(163, 228, 215, 0.25);
+  border: none;
+  margin: 0 2px;
+  border-radius: 0.7rem;
+  font-weight: 600;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.07);
+}
+
+.pagination .page-link:hover,
+.pagination .page-link:focus {
+  background: var(--emerald-green, #2ecc71);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(46,204,113,0.10);
+}
+
+.pagination .page-item.active .page-link {
+  background: var(--emerald-dark, #27ae60);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 16px rgba(46,204,113,0.15);
+}
+
+.pagination .page-item.disabled .page-link {
+  background: #e3f2fd;
+  color: #b2bec3;
+  border: none;
+}

@@ -8,6 +8,7 @@ from .models import Paciente, Cita, Procedimiento, CitaProcedimiento, Pago
 from django.utils import timezone
 from django.forms import modelformset_factory
 from django.db.models import Q, Exists, OuterRef, Subquery
+from django.core.paginator import Paginator
 
 #def login(request):
     #return render(request, 'login.html')
@@ -119,8 +120,14 @@ def cita_pacientes(request):
             )
         ).order_by('proxima_cita')
 
+    # --- Paginación ---
+    paginator = Paginator(pacientes, 9)  # 9 cards por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     return render(request, 'cards_patient.html', {
-        'pacientes': pacientes,
+        'pacientes': page_obj.object_list,
+        'page_obj': page_obj,
         'query': query,
         'fecha': fecha,
         'orden': orden,
@@ -326,6 +333,7 @@ def ajax_filtrar_pacientes(request):
     query = request.GET.get('q', '')
     fecha = request.GET.get('fecha', '')
     orden = request.GET.get('orden', '')
+    page_number = request.GET.get('page', 1)
 
     pacientes = Paciente.objects.all()
 
@@ -353,6 +361,21 @@ def ajax_filtrar_pacientes(request):
             )
         ).order_by('proxima_cita')
 
-    html = render_to_string('partials/cards_pacientes_block.html', {'pacientes': pacientes})
+    # Paginación
+    paginator = Paginator(pacientes, 9)
+    page_obj = paginator.get_page(page_number)
+
+    # Renderiza el bloque parcial con paginación y filtros
+    html = render_to_string(
+        'partials/cards_pacientes_block.html',
+        {
+            'pacientes': page_obj.object_list,
+            'page_obj': page_obj,
+            'query': query,
+            'fecha': fecha,
+            'orden': orden,
+        },
+        request=request
+    )
     return JsonResponse({'html': html})
 # Create your views here.
