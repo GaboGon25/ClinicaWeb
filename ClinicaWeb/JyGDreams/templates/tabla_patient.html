@@ -15,6 +15,15 @@
         </a>
     </div>
 
+    <form method="get" class="mb-3 position-relative" autocomplete="off" style="max-width:400px;">
+      <input type="text" name="q" id="busquedaPaciente" class="form-control" placeholder="Buscar por nombre o apellido" value="{{ query }}">
+      <div id="sugerenciasPacientes" class="list-group position-absolute w-100" style="z-index:10;"></div>
+      <div class="d-flex gap-2 mt-2">
+          <button type="submit" class="btn btn-primary">Buscar</button>
+          <a href="{% url 'tabla_paciente' %}" class="btn btn-secondary">Mostrar todos</a>
+      </div>
+    </form>
+
     <div class="tabla-contenedor">
         <table class="tabla-pacientes">
             <thead>
@@ -64,5 +73,35 @@
   });
 </script>
 {% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const input = document.getElementById('busquedaPaciente');
+  const sugerenciasDiv = document.getElementById('sugerenciasPacientes');
+  input.addEventListener('input', function() {
+    const valor = this.value;
+    if (valor.length > 0) {
+      fetch(`{% url 'ajax_sugerencias_pacientes' %}?q=${valor}`)
+        .then(response => response.json())
+        .then(data => {
+          sugerenciasDiv.innerHTML = '';
+          data.forEach(nombre => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'list-group-item list-group-item-action';
+            item.textContent = nombre;
+            item.onclick = () => {
+              input.value = nombre;
+              sugerenciasDiv.innerHTML = '';
+            };
+            sugerenciasDiv.appendChild(item);
+          });
+        });
+    } else {
+      sugerenciasDiv.innerHTML = '';
+    }
+  });
+});
+</script>
 
 {% endblock %}

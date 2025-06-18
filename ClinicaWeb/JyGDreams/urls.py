@@ -8,7 +8,7 @@ urlpatterns = [
     path('index/', views.index, name='index'),  # ojo aca
     path("logout", views.logout_view, name="logout"),
     path('agregar_paciente/', views.agregar_paciente, name='agregar_paciente'),
-    path('tabla_paciente/', views.tabla_paciente, name='tabla_paciente'),
+    path('tabla_paciente/', views.lista_pacientes, name='tabla_paciente'),
     path('editar_paciente/<int:paciente_id>/', views.editar_paciente, name='editar_paciente'),
     path('cita_pacientes/', views.cita_pacientes, name='cita_pacientes'),
     #path('cuadros_citas/', views.cuadros_citas, name='cuadros_citas'),
@@ -22,4 +22,5 @@ urlpatterns = [
     path('cita/<int:cita_id>/pago/', views.agregar_pago, name='agregar_pago'),
     path('editar_pago/<int:cita_id>/', views.editar_pago, name='editar_pago'),
     path('detalle_pago/<int:cita_id>/', views.detalle_pago, name='detalle_pago'),
+    path('ajax/sugerencias-pacientes/', views.ajax_sugerencias_pacientes, name='ajax_sugerencias_pacientes'),
 ]

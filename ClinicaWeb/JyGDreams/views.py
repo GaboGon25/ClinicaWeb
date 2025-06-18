@@ -2,9 +2,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.http import HttpResponse
+from django.http import JsonResponse
 from .models import Paciente, Cita, Procedimiento, CitaProcedimiento, Pago
 from django.utils import timezone
 from django.forms import modelformset_factory
+from django.db.models import Q
 
 #def login(request):
     #return render(request, 'login.html')
@@ -263,5 +265,24 @@ def detalle_pago(request, cita_id):
         'paciente': paciente,
     })
     
+def lista_pacientes(request):
+    query = request.GET.get('q', '')
+    pacientes = Paciente.objects.all()
+    if query:
+        pacientes = pacientes.filter(
+            Q(nombre__icontains=query) | Q(apellido__icontains=query)
+        )
+    return render(request, 'tabla_patient.html', {
+        'pacientes': pacientes,
+        'query': query,
+    })
+
+def ajax_sugerencias_pacientes(request):
+    q = request.GET.get('q', '')
+    sugerencias = Paciente.objects.filter(
+        Q(nombre__icontains=q) | Q(apellido__icontains=q)
+    ).values_list('nombre', flat=True).distinct()[:5]
+    return JsonResponse(list(sugerencias), safe=False)
+
 
 # Create your views here.
