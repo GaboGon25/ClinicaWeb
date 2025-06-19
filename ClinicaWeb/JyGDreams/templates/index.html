@@ -27,7 +27,7 @@
             <i class="bi bi-folder-fill icon"></i>
             <h5 class="card-title">Expedientes</h5>
             <p class="card-text">Accede a el historial medico del paciente</p>
-            <a href="#" class="btn btn-emerald">Ver Expedientes</a>
+            <a href="{% url 'expediente_pacientes' %}" class="btn btn-emerald">Ver Expedientes</a>
         </div>
     </div>
 
@@ -53,7 +53,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-{% if messages %}
+<!-- {% if messages %}
 <script>
   Swal.fire({
     icon: 'success',
@@ -62,6 +62,21 @@
     timer: 2000
   });
 </script>
+{% endif %} -->
+
+{% if messages %}
+  {% for message in messages %}
+    <script>
+      Swal.fire({
+        icon: '{{ message.tags }}',
+        title: '{{ message|escapejs }}',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 4000
+      });
+    </script>
+  {% endfor %}
 {% endif %}
 
 {% endblock %}

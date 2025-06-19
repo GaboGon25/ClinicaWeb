@@ -73,3 +73,44 @@ class Pago(models.Model):
 
     def __str__(self):
         return f"Pago de {self.total} para {self.cita} el {self.fecha}"
+    
+
+class Expediente(models.Model):
+    paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE)
+    fecha_registro = models.DateField()
+    usa_marcapasos = models.CharField(max_length=2, choices=[('si', 'Sí'), ('no', 'No')])
+    historial_clinico = models.TextField()
+
+    def __str__(self):
+        return f"Expediente de {self.paciente} - {self.fecha_registro}"
+
+class Habito(models.Model):
+    expediente = models.OneToOneField(Expediente, on_delete=models.CASCADE)
+    vasos_agua = models.CharField(max_length=100)
+    trasnoche = models.CharField(max_length=100)
+    tabaco = models.CharField(max_length=100)
+    cafe = models.CharField(max_length=100)
+    licor = models.CharField(max_length=100)
+    medicamentos = models.CharField(max_length=100)
+    suplementos = models.CharField(max_length=100)
+
+class BiotipoCutaneo(models.Model):
+    nombre = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.nombre
+
+class ExpedienteBiotipo(models.Model):
+    expediente = models.OneToOneField(Expediente, on_delete=models.CASCADE)
+    biotipo = models.ForeignKey(BiotipoCutaneo, on_delete=models.PROTECT)
+
+class CuidadoPiel(models.Model):
+    nombre = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.nombre
+
+class ExpedienteCuidadoPiel(models.Model):
+    expediente = models.ForeignKey(Expediente, on_delete=models.CASCADE)
+    cuidado = models.ForeignKey(CuidadoPiel, on_delete=models.PROTECT)
+    otro = models.CharField(max_length=100, blank=True)  # Para el campo "Otros"

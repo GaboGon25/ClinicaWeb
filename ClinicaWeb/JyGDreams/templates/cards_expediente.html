@@ -1,0 +1,25 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'JyGDreams/cards_patient.css' %}">
+
+<div class="container py-5">
+  <h2 class="text-center mb-5 title"><i class="bi bi-journal-medical me-2"></i>Expedientes Registrados</h2>
+  <div class="row g-4">
+    {% for paciente in pacientes %}
+      {% cycle 'bg1' 'bg2' 'bg3' 'bg4' 'bg5' as color_class silent %}
+      <div class="col-sm-12 col-md-6 col-lg-4 d-flex">
+        <a href="{% url 'seleccionar_exp' paciente.id %}" class="card-link flex-fill">
+          <div class="paciente-card {{ color_class }} h-100">
+            <div class="card-body d-flex flex-column justify-content-center align-items-start">
+              <h5 class="card-title mb-2">{{ paciente.nombre }} {{ paciente.apellido }}</h5>
+              <p class="card-text"><i class="bi bi-briefcase-fill me-2"></i>{{ paciente.ocupacion }}</p>
+            </div>
+          </div>
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

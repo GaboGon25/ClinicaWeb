@@ -12,8 +12,8 @@
     <h2 class="text-success">
       <i class="bi bi-cash-stack me-2"></i>Detalle de Pago de {{ paciente }}
     </h2>
-    <a href="#" class="btn btn-outline-success">
-      <i class="bi bi-wallet2"></i> Ver Pagos
+    <a href="{% url 'home_citas' paciente.id %}" class="btn btn-outline-success">
+      <i class="bi bi-skip-backward-fill"></i> Regresar a Citas
     </a>
   </div>
 

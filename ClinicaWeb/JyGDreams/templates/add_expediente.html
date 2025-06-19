@@ -1,0 +1,189 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block title %}Agregar Expediente - JyGDreams{% endblock %}
+{% block extra_js %}
+<script src="{% static 'JyGDreams/validaciones_expediente.js' %}"></script>
+{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'JyGDreams/add_cita.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <h2 class="mb-4 text-success"><i class="bi bi-journal-medical me-2"></i>Agregando Expediente de {{paciente.nombre}} {{paciente.apellido }}</h2>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <!-- FECHA DE REGISTRO -->
+    <div class="card p-4 shadow-sm mb-4">
+      <h5 class="fw-bold text-primary"><i class="bi bi-calendar-check me-2"></i>Fecha de Registro</h5>
+      <div class="row">
+        <div class="col-md-4">
+          <input type="date" class="form-control" name="fecha" required>
+        </div>
+      </div>
+    </div>
+
+    <!-- HÁBITOS -->
+    <div class="card p-4 shadow-sm mb-4">
+      <h5 class="fw-bold text-success"><i class="bi bi-heart-pulse me-2"></i>Hábitos</h5>
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <label>Vasos de agua</label>
+          <input type="text" class="form-control" name="vasos_agua" placeholder="Cantidad diaria">
+        </div>
+        <div class="col-md-4 mb-3">
+          <label>Trasnoche</label>
+          <input type="text" class="form-control" name="trasnoche" placeholder="Frecuencia">
+        </div>
+        <div class="col-md-4 mb-3">
+          <label>Consumo Tabaco</label>
+          <input type="text" class="form-control" name="consumo_tabaco" placeholder="Sí / No o frecuencia">
+        </div>
+        <div class="col-md-4 mb-3">
+          <label>Consumo Café</label>
+          <input type="text" class="form-control" name="consumo_cafe" placeholder="Cantidad diaria">
+        </div>
+        <div class="col-md-4 mb-3">
+          <label>Consumo Licor</label>
+          <input type="text" class="form-control" name="consumo_licor" placeholder="Frecuencia">
+        </div>
+        <div class="col-md-4 mb-3">
+          <label>Medicamentos</label>
+          <input type="text" class="form-control" name="medicamentos" placeholder="Nombre o tipo">
+        </div>
+        <div class="col-md-4 mb-3">
+          <label>Suplementos</label>
+          <input type="text" class="form-control" name="suplementos" placeholder="Tipo o frecuencia">
+        </div>
+      </div>
+    </div>
+
+    <!-- CUIDADOS DE PIEL -->
+    <div class="card p-4 shadow-sm mb-4">
+      <h5 class="fw-bold text-success"><i class="bi bi-droplet-half me-2"></i>Cuidados de Piel</h5>
+      <div class="row">
+        <div class="col-md-3 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="jabon" name="jabon">
+            <label class="form-check-label" for="jabon">Jabón Facial</label>
+          </div>
+        </div>
+        <div class="col-md-3 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="cremas" name="cremas">
+            <label class="form-check-label" for="cremas">Cremas</label>
+          </div>
+        </div>
+        <div class="col-md-3 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="serum" name="serum">
+            <label class="form-check-label" for="serum">Serum</label>
+          </div>
+        </div>
+        <div class="col-md-3 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="aceites" name="aceites">
+            <label class="form-check-label" for="aceites">Aceites</label>
+          </div>
+        </div>
+        <div class="col-md-3 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="tonico" name="tonico">
+            <label class="form-check-label" for="tonico">Tónico</label>
+          </div>
+        </div>
+        <div class="col-md-3 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="protector" name="protector">
+            <label class="form-check-label" for="protector">Protector Solar</label>
+          </div>
+        </div>
+        <div class="col-md-3 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="ninguno" name="ninguno">
+            <label class="form-check-label" for="ninguno">Ninguno</label>
+          </div>
+        </div>
+        <!-- Opción Otro -->
+        <div class="col-md-3 mb-2 d-flex align-items-center">
+          <div class="form-check me-2">
+            <input class="form-check-input" type="checkbox" id="otroCheck" name="otro_check">
+            <label class="form-check-label" for="otroCheck">Otro</label>
+          </div>
+          <input type="text" id="otroInput" class="form-control form-control-sm" name="otro_input" placeholder="Especifique..." style="display: none;">
+        </div>
+      </div>
+    </div>
+
+    <!-- BIOTIPO Y MARCAPASOS -->
+    <div class="card p-4 shadow-sm mb-4">
+      <div class="row align-items-center">
+        <div class="col-md-6 mb-3">
+          <h5 class="fw-bold text-success"><i class="bi bi-person-lines-fill me-2"></i>Biotipo Cutáneo</h5>
+          <select class="form-select" name="biotipo">
+    {% for biotipo in biotipos %}
+        <option value="{{ biotipo.nombre }}">{{ biotipo.nombre }}</option>
+    {% endfor %}
+</select>
+        </div>
+        <div class="col-md-6 mb-3">
+          <h5 class="fw-bold text-success"><i class="bi bi-activity me-2"></i>Uso de Marcapasos</h5>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="marcapasos" id="si" value="si">
+            <label class="form-check-label" for="si">Sí</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="marcapasos" id="no" value="no" checked>
+            <label class="form-check-label" for="no">No</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORIAL CLÍNICO -->
+    <div class="card p-4 shadow-sm mb-4">
+      <h5 class="fw-bold text-success"><i class="bi bi-file-medical me-2"></i>Historial Clínico</h5>
+      <textarea class="form-control" name="historial_clinico" rows="4" placeholder="Describa brevemente el historial clínico del paciente"></textarea>
+    </div>
+
+    <!-- BOTÓN -->
+    <div class="d-grid">
+      <button type="submit" class="btn btn-success btn-lg rounded-pill">
+        <i class="bi bi-plus-circle"></i> Agregar
+      </button>
+    </div>
+
+  </form>
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.querySelector('form');
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      Swal.fire({
+        title: 'Registro de Expediente',
+        text: '¿Deseas guardar el expediente?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, guardar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          form.submit();
+        }
+      });
+    });
+  }
+});
+</script>
+
+{% endblock %}
