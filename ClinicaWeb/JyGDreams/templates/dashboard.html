@@ -1,0 +1,147 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block title %}Dashboard - JyGDreams{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'JyGDreams/add_cita.css' %}">
+<style>
+  .dashboard-card {
+    border-radius: 18px;
+    box-shadow: 0 2px 8px #d0e6df;
+    background: #f8fafc;
+    padding: 2rem 1.5rem;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+  .dashboard-card h3 {
+    font-size: 2.2rem;
+    color: #388E3C;
+    margin-bottom: 0.5rem;
+  }
+  .dashboard-card .icon {
+    font-size: 2.5rem;
+    color: #4CAF50;
+    margin-bottom: 0.5rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h2 class="mb-4 text-primary"><i class="bi bi-bar-chart-line me-2"></i>Dashboard de la Clínica</h2>
+
+  <!-- Cards resumen -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="dashboard-card">
+        <div class="icon"><i class="bi bi-cash-coin"></i></div>
+        <h3>₡350,000.00</h3>
+        <div>Ganancias Totales</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="dashboard-card">
+        <div class="icon"><i class="bi bi-activity"></i></div>
+        <h3>28</h3>
+        <div>Procedimientos Realizados</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="dashboard-card">
+        <div class="icon"><i class="bi bi-person-check"></i></div>
+        <h3>19</h3>
+        <div>Pacientes Atendidos</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráfico de pastel de ganancias por procedimiento -->
+  <div class="card p-4 shadow-sm mb-4">
+    <h5 class="fw-bold text-success mb-3"><i class="bi bi-pie-chart me-2"></i>Ganancias por Procedimiento</h5>
+    <div class="row">
+      <div class="col-md-7">
+        <canvas id="gananciasPieChart"></canvas>
+      </div>
+      <div class="col-md-5 d-flex align-items-center">
+        <ul class="list-group w-100">
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            Limpieza Facial
+            <span class="badge bg-success rounded-pill">₡80,000.00</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            Microdermoabrasión
+            <span class="badge bg-success rounded-pill">₡120,000.00</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            Depilación Láser
+            <span class="badge bg-success rounded-pill">₡150,000.00</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cantidad de veces realizado cada procedimiento -->
+  <div class="card p-4 shadow-sm mb-4">
+    <h5 class="fw-bold text-success mb-3"><i class="bi bi-list-ol me-2"></i>Veces Realizado por Procedimiento</h5>
+    <div class="table-responsive">
+      <table class="table table-dashboard">
+        <thead>
+          <tr>
+            <th>Procedimiento</th>
+            <th>Cantidad</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Limpieza Facial</td>
+            <td>8</td>
+          </tr>
+          <tr>
+            <td>Microdermoabrasión</td>
+            <td>10</td>
+          </tr>
+          <tr>
+            <td>Depilación Láser</td>
+            <td>10</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var ctx = document.getElementById('gananciasPieChart').getContext('2d');
+  var gananciasPieChart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: ['Limpieza Facial', 'Microdermoabrasión', 'Depilación Láser'],
+      datasets: [{
+        data: [80000, 120000, 150000],
+        backgroundColor: [
+          '#81c784',
+          '#4fc3f7',
+          '#ffd54f'
+        ],
+        borderColor: '#fff',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
+});
+</script>
+{% endblock %}

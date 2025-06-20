@@ -29,4 +29,5 @@ urlpatterns = [
     path('detalle_pago/<int:cita_id>/', views.detalle_pago, name='detalle_pago'),
     path('ajax/sugerencias-pacientes/', views.ajax_sugerencias_pacientes, name='ajax_sugerencias_pacientes'),
     path('ajax/filtrar-pacientes/', views.ajax_filtrar_pacientes, name='ajax_filtrar_pacientes'),
+     path('stadistic/', views.stadistic, name='stadistic'),
 ]
