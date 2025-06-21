@@ -565,5 +565,5 @@ def ajax_filtrar_pacientes(request):
     return JsonResponse({'html': html})
 # Create your views here.
 
-def stadistic(request):
-    return render(request, 'dashboard.html')
+def estadisticas(request):
+    return render(request, 'dashboard.html',)

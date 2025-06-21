@@ -23,19 +23,40 @@
     color: #4CAF50;
     margin-bottom: 0.5rem;
   }
+  .table-dashboard th {
+    background: #e8f5e9;
+    color: #388E3C;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container py-5">
-  <h2 class="mb-4 text-primary"><i class="bi bi-bar-chart-line me-2"></i>Dashboard de la Clínica</h2>
+  <h2 class="mb-4 text-primary"><i class="bi bi-bar-chart-line me-2"></i>Estadisticas de la Clínica</h2>
+
+  <!-- Filtro de fechas -->
+  <form method="get" class="row g-3 align-items-end mb-4">
+    <div class="col-md-4">
+      <label for="fecha_inicio" class="form-label">Fecha inicio</label>
+      <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" value="2024-06-01">
+    </div>
+    <div class="col-md-4">
+      <label for="fecha_fin" class="form-label">Fecha fin</label>
+      <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" value="2024-06-20">
+    </div>
+    <div class="col-md-4">
+      <button type="submit" class="btn btn-success btn-lg rounded-pill w-100">
+        <i class="bi bi-search"></i> Filtrar
+      </button>
+    </div>
+  </form>
 
   <!-- Cards resumen -->
   <div class="row mb-4">
     <div class="col-md-4">
       <div class="dashboard-card">
         <div class="icon"><i class="bi bi-cash-coin"></i></div>
-        <h3>₡350,000.00</h3>
+        <h3>C$350,000.00</h3>
         <div>Ganancias Totales</div>
       </div>
     </div>
@@ -55,75 +76,84 @@
     </div>
   </div>
 
-  <!-- Gráfico de pastel de ganancias por procedimiento -->
+  <!-- Ganancias por procedimiento -->
   <div class="card p-4 shadow-sm mb-4">
-    <h5 class="fw-bold text-success mb-3"><i class="bi bi-pie-chart me-2"></i>Ganancias por Procedimiento</h5>
-    <div class="row">
-      <div class="col-md-7">
-        <canvas id="gananciasPieChart"></canvas>
-      </div>
-      <div class="col-md-5 d-flex align-items-center">
-        <ul class="list-group w-100">
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            Limpieza Facial
-            <span class="badge bg-success rounded-pill">₡80,000.00</span>
-          </li>
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            Microdermoabrasión
-            <span class="badge bg-success rounded-pill">₡120,000.00</span>
-          </li>
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            Depilación Láser
-            <span class="badge bg-success rounded-pill">₡150,000.00</span>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <!-- Cantidad de veces realizado cada procedimiento -->
-  <div class="card p-4 shadow-sm mb-4">
-    <h5 class="fw-bold text-success mb-3"><i class="bi bi-list-ol me-2"></i>Veces Realizado por Procedimiento</h5>
+    <h5 class="fw-bold text-success mb-3"><i class="bi bi-graph-up-arrow me-2"></i>Ganancias por Procedimiento</h5>
     <div class="table-responsive">
       <table class="table table-dashboard">
         <thead>
           <tr>
             <th>Procedimiento</th>
-            <th>Cantidad</th>
+            <th>Ganancia (C$)</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>Limpieza Facial</td>
-            <td>8</td>
+            <td>C$80,000.00</td>
           </tr>
           <tr>
             <td>Microdermoabrasión</td>
-            <td>10</td>
+            <td>C$120,000.00</td>
           </tr>
           <tr>
             <td>Depilación Láser</td>
-            <td>10</td>
+            <td>C$150,000.00</td>
           </tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- Cantidad de veces realizado cada procedimiento -->
+  <div class="card p-4 shadow-sm mb-4">
+    <h5 class="fw-bold text-success mb-3"><i class="bi bi-list-ol me-2"></i>Procedimientos Realizados</h5>
+    <div class="row">
+      <div class="col-md-6">
+        <canvas id="vecesPieChart"></canvas>
+      </div>
+      <div class="col-md-6 d-flex align-items-center">
+        <div class="table-responsive w-100">
+          <table class="table table-dashboard">
+            <thead>
+              <tr>
+                <th>Procedimiento</th>
+                <th>Cantidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Limpieza Facial</td>
+                <td>8</td>
+              </tr>
+              <tr>
+                <td>Microdermoabrasión</td>
+                <td>10</td>
+              </tr>
+              <tr>
+                <td>Depilación Láser</td>
+                <td>10</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  var ctx = document.getElementById('gananciasPieChart').getContext('2d');
-  var gananciasPieChart = new Chart(ctx, {
+  var ctx = document.getElementById('vecesPieChart').getContext('2d');
+  var vecesPieChart = new Chart(ctx, {
     type: 'pie',
     data: {
       labels: ['Limpieza Facial', 'Microdermoabrasión', 'Depilación Láser'],
       datasets: [{
-        data: [80000, 120000, 150000],
+        data: [8, 10, 10],
         backgroundColor: [
           '#81c784',
           '#4fc3f7',
