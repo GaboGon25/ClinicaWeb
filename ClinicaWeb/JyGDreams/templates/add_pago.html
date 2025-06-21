@@ -21,7 +21,7 @@
         </div>
         <div class="col-md-6">
           <label class="form-label">Valor</label>
-          <input type="text" class="form-control" value="${{ procedimiento.costo }}" readonly>
+          <input type="text" class="form-control" value="C${{ procedimiento.costo }}" readonly>
         </div>
       </div>
       {% endfor %}
@@ -31,7 +31,7 @@
         <div class="col-md-6 offset-md-6">
           <div class="d-flex justify-content-between align-items-center">
             <strong class="fs-5">Monto Final:</strong>
-            <span class="fs-5 fw-bold text-success">${{ monto_final }}</span>
+            <span class="fs-5 fw-bold text-success">C${{ monto_final }}</span>
           </div>
         </div>
       </div>
@@ -46,6 +46,8 @@
   </div>
 </div>
 
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const form = document.querySelector('form');
