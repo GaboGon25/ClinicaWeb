@@ -19,11 +19,15 @@
     <form>
       {% for proc in cita.procedimientos.all %}
         <div class="row mb-4">
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label class="form-label">{% if forloop.first %}Procedimiento{% else %}Segundo Procedimiento{% endif %}</label>
             <input type="text" class="form-control" value="{{ proc.titulo }}" disabled>
           </div>
-          <div class="col-md-6">
+          <div class="col-md-4">
+            <label class="form-label">Duración</label>
+            <input type="text" class="form-control" value="{{ proc.duracion }}" disabled>
+          </div>
+          <div class="col-md-4">
             <label class="form-label">Valor</label>
             <input type="text" class="form-control" value="{{ proc.costo }}" disabled>
           </div>
@@ -31,11 +35,15 @@
       {% endfor %}
       {% if cita.procedimiento2 %}
       <div class="row mb-4">
-        <div class="col-md-6">
+        <div class="col-md-4">
           <label class="form-label">Segundo Procedimiento</label>
           <input type="text" class="form-control" value="Botox" disabled>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
+          <label class="form-label">Duración</label>
+          <input type="text" class="form-control" value="30 minutos" disabled>
+        </div>
+        <div class="col-md-4">
           <label class="form-label">Valor</label>
           <input type="text" class="form-control" value="1000" disabled>
         </div>
