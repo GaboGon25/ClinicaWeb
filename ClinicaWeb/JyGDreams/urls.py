@@ -30,4 +30,5 @@ urlpatterns = [
     path('ajax/sugerencias-pacientes/', views.ajax_sugerencias_pacientes, name='ajax_sugerencias_pacientes'),
     path('ajax/filtrar-pacientes/', views.ajax_filtrar_pacientes, name='ajax_filtrar_pacientes'),
     path('estadisticas/', views.estadisticas, name='estadisticas'),
+    path('paciente/<int:paciente_id>/pdf-citas/', views.generar_pdf_citas, name='generar_pdf_citas'),
 ]

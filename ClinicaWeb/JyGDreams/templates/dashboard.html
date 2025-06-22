@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% load static %}
+{% load math_filters %}
 
 {% block title %}Dashboard - JyGDreams{% endblock %}
 {% block extra_css %}
@@ -27,79 +28,133 @@
     background: #e8f5e9;
     color: #388E3C;
   }
+  .filter-info {
+    background: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    border-radius: 0 8px 8px 0;
+  }
+  .no-data {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    font-style: italic;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container py-5">
-  <h2 class="mb-4 text-primary"><i class="bi bi-bar-chart-line me-2"></i>Estadisticas de la Clínica</h2>
+  <h2 class="mb-4 text-primary"><i class="bi bi-bar-chart-line me-2"></i>Estadísticas de la Clínica</h2>
 
   <!-- Filtro de fechas -->
   <form method="get" class="row g-3 align-items-end mb-4">
-    <div class="col-md-4">
+    <div class="col-md-3">
       <label for="fecha_inicio" class="form-label">Fecha inicio</label>
-      <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" value="2024-06-01">
+      <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" value="{{ fecha_inicio }}">
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
       <label for="fecha_fin" class="form-label">Fecha fin</label>
-      <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" value="2024-06-20">
+      <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" value="{{ fecha_fin }}">
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
       <button type="submit" class="btn btn-success btn-lg rounded-pill w-100">
         <i class="bi bi-search"></i> Filtrar
       </button>
     </div>
+    <div class="col-md-3">
+      <a href="{% url 'estadisticas' %}" class="btn btn-outline-secondary btn-lg rounded-pill w-100">
+        <i class="bi bi-arrow-clockwise"></i> Limpiar
+      </a>
+    </div>
   </form>
+
+  <!-- Información del filtro aplicado -->
+  {% if fecha_inicio or fecha_fin %}
+  <div class="filter-info">
+    <h6 class="mb-2"><i class="bi bi-info-circle me-2"></i>Filtro aplicado:</h6>
+    <p class="mb-0">
+      {% if fecha_inicio and fecha_fin %}
+        Mostrando datos desde {{ fecha_inicio }} hasta {{ fecha_fin }}
+      {% elif fecha_inicio %}
+        Mostrando datos desde {{ fecha_inicio }}
+      {% elif fecha_fin %}
+        Mostrando datos hasta {{ fecha_fin }}
+      {% endif %}
+    </p>
+  </div>
+  {% endif %}
 
   <!-- Cards resumen -->
   <div class="row mb-4">
     <div class="col-md-4">
       <div class="dashboard-card">
         <div class="icon"><i class="bi bi-cash-coin"></i></div>
-        <h3>C$350,000.00</h3>
+        <h3>C${{ ganancias_totales|floatformat:2 }}</h3>
         <div>Ganancias Totales</div>
+        {% if fecha_inicio or fecha_fin %}
+        <small class="text-muted">En el período seleccionado</small>
+        {% endif %}
       </div>
     </div>
     <div class="col-md-4">
       <div class="dashboard-card">
         <div class="icon"><i class="bi bi-activity"></i></div>
-        <h3>28</h3>
+        <h3>{{ total_procedimientos }}</h3>
         <div>Procedimientos Realizados</div>
+        {% if fecha_inicio or fecha_fin %}
+        <small class="text-muted">En el período seleccionado</small>
+        {% endif %}
       </div>
     </div>
     <div class="col-md-4">
       <div class="dashboard-card">
         <div class="icon"><i class="bi bi-person-check"></i></div>
-        <h3>19</h3>
-        <div>Pacientes Atendidos</div>
+        <h3>{{ total_citas }}</h3>
+        <div>Citas Atendidas</div>
+        {% if fecha_inicio or fecha_fin %}
+        <small class="text-muted">En el período seleccionado</small>
+        {% endif %}
       </div>
     </div>
   </div>
 
   <!-- Ganancias por procedimiento -->
   <div class="card p-4 shadow-sm mb-4">
-    <h5 class="fw-bold text-success mb-3"><i class="bi bi-graph-up-arrow me-2"></i>Ganancias por Procedimiento</h5>
+    <h5 class="fw-bold text-success mb-3">
+      <i class="bi bi-graph-up-arrow me-2"></i>Ganancias por Procedimiento
+      {% if fecha_inicio or fecha_fin %}
+      <small class="text-muted">(Período seleccionado)</small>
+      {% endif %}
+    </h5>
     <div class="table-responsive">
       <table class="table table-dashboard">
         <thead>
           <tr>
             <th>Procedimiento</th>
             <th>Ganancia (C$)</th>
+            <th>Porcentaje</th>
           </tr>
         </thead>
         <tbody>
+          {% for proc in ganancias_por_procedimiento %}
           <tr>
-            <td>Limpieza Facial</td>
-            <td>C$80,000.00</td>
+            <td>{{ proc.titulo }}</td>
+            <td>C${{ proc.ganancia|floatformat:2 }}</td>
+            <td>
+              {% if ganancias_totales > 0 %}
+                {{ proc.ganancia|div:ganancias_totales|mul:100|floatformat:1 }}%
+              {% else %}
+                0%
+              {% endif %}
+            </td>
           </tr>
+          {% empty %}
           <tr>
-            <td>Microdermoabrasión</td>
-            <td>C$120,000.00</td>
+            <td colspan="3" class="no-data">No hay datos de ganancias en este rango de fechas.</td>
           </tr>
-          <tr>
-            <td>Depilación Láser</td>
-            <td>C$150,000.00</td>
-          </tr>
+          {% endfor %}
         </tbody>
       </table>
     </div>
@@ -107,10 +162,22 @@
 
   <!-- Cantidad de veces realizado cada procedimiento -->
   <div class="card p-4 shadow-sm mb-4">
-    <h5 class="fw-bold text-success mb-3"><i class="bi bi-list-ol me-2"></i>Procedimientos Realizados</h5>
+    <h5 class="fw-bold text-success mb-3">
+      <i class="bi bi-list-ol me-2"></i>Veces Realizado por Procedimiento
+      {% if fecha_inicio or fecha_fin %}
+      <small class="text-muted">(Período seleccionado)</small>
+      {% endif %}
+    </h5>
     <div class="row">
       <div class="col-md-6">
+        {% if data_veces %}
         <canvas id="vecesPieChart"></canvas>
+        {% else %}
+        <div class="no-data">
+          <i class="bi bi-pie-chart" style="font-size: 4rem; color: #ddd;"></i>
+          <p class="mt-3">No hay datos para mostrar en el gráfico</p>
+        </div>
+        {% endif %}
       </div>
       <div class="col-md-6 d-flex align-items-center">
         <div class="table-responsive w-100">
@@ -119,21 +186,27 @@
               <tr>
                 <th>Procedimiento</th>
                 <th>Cantidad</th>
+                <th>Porcentaje</th>
               </tr>
             </thead>
             <tbody>
+              {% for proc in cantidad_por_procedimiento %}
               <tr>
-                <td>Limpieza Facial</td>
-                <td>8</td>
+                <td>{{ proc.titulo }}</td>
+                <td>{{ proc.cantidad }}</td>
+                <td>
+                  {% if total_procedimientos > 0 %}
+                    {{ proc.cantidad|div:total_procedimientos|mul:100|floatformat:1 }}%
+                  {% else %}
+                    0%
+                  {% endif %}
+                </td>
               </tr>
+              {% empty %}
               <tr>
-                <td>Microdermoabrasión</td>
-                <td>10</td>
+                <td colspan="3" class="no-data">No hay datos de procedimientos en este rango de fechas.</td>
               </tr>
-              <tr>
-                <td>Depilación Láser</td>
-                <td>10</td>
-              </tr>
+              {% endfor %}
             </tbody>
           </table>
         </div>
@@ -145,33 +218,58 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{{ labels_veces|json_script:"labelsVeces" }}
+{{ data_veces|json_script:"dataVeces" }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  var ctx = document.getElementById('vecesPieChart').getContext('2d');
-  var vecesPieChart = new Chart(ctx, {
-    type: 'pie',
-    data: {
-      labels: ['Limpieza Facial', 'Microdermoabrasión', 'Depilación Láser'],
-      datasets: [{
-        data: [8, 10, 10],
-        backgroundColor: [
-          '#81c784',
-          '#4fc3f7',
-          '#ffd54f'
-        ],
-        borderColor: '#fff',
-        borderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          position: 'bottom'
+  var labels = JSON.parse(document.getElementById('labelsVeces').textContent);
+  var data = JSON.parse(document.getElementById('dataVeces').textContent);
+
+  if (labels.length > 0 && data.length > 0) {
+    var ctx = document.getElementById('vecesPieChart').getContext('2d');
+    var vecesPieChart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: data,
+          backgroundColor: [
+            '#81c784',
+            '#4fc3f7',
+            '#ffd54f',
+            '#ffb74d',
+            '#9575cd',
+            '#e57373',
+            '#4db6ac',
+            '#f06292',
+            '#7986cb',
+            '#a1887f'
+          ],
+          borderColor: '#fff',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                var label = context.label || '';
+                var value = context.parsed;
+                var total = context.dataset.data.reduce((a, b) => a + b, 0);
+                var percentage = ((value / total) * 100).toFixed(1);
+                return label + ': ' + value + ' (' + percentage + '%)';
+              }
+            }
+          }
         }
       }
-    }
-  });
+    });
+  }
 });
 </script>
 {% endblock %}

@@ -7,8 +7,15 @@ from django.http import JsonResponse
 from .models import Paciente, Cita, Procedimiento, CitaProcedimiento, Pago, Expediente, BiotipoCutaneo, CuidadoPiel, Habito, ExpedienteBiotipo, ExpedienteCuidadoPiel
 from django.utils import timezone
 from django.forms import modelformset_factory
-from django.db.models import Q, Exists, OuterRef, Subquery
+from django.db.models import Q, Exists, OuterRef, Subquery, Sum, Count, F
 from django.core.paginator import Paginator
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.lib import colors
+from io import BytesIO
+from datetime import datetime
 
 #def login(request):
     #return render(request, 'login.html')
@@ -566,4 +573,210 @@ def ajax_filtrar_pacientes(request):
 # Create your views here.
 
 def estadisticas(request):
-    return render(request, 'dashboard.html',)
+    # Filtros de fechas
+    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_fin = request.GET.get('fecha_fin')
+    
+    # Obtener solo las citas que tienen pagos asociados (citas pagadas)
+    citas_pagadas = Cita.objects.filter(pago__isnull=False)
+    
+    # Aplicar filtros de fecha a las citas pagadas
+    if fecha_inicio:
+        citas_pagadas = citas_pagadas.filter(fecha__gte=fecha_inicio)
+    if fecha_fin:
+        citas_pagadas = citas_pagadas.filter(fecha__lte=fecha_fin)
+    
+    # Obtener los pagos correspondientes a las citas filtradas
+    pagos = Pago.objects.filter(cita__in=citas_pagadas)
+    
+    # Ganancias totales (suma de todos los pagos en el rango)
+    ganancias_totales = pagos.aggregate(total=Sum('total'))['total'] or 0
+    
+    # Citas atendidas (citas pagadas) en el rango de fechas
+    total_citas = citas_pagadas.count()
+    
+    # Procedimientos realizados y ganancias por procedimiento
+    procedimientos = Procedimiento.objects.all()
+    ganancias_por_procedimiento = []
+    cantidad_por_procedimiento = []
+    
+    for proc in procedimientos:
+        # Todas las citas pagadas con ese procedimiento en el rango de fechas
+        citas_proc = CitaProcedimiento.objects.filter(
+            procedimiento=proc, 
+            cita__in=citas_pagadas
+        )
+        cantidad = citas_proc.count()
+        
+        # Ganancia por procedimiento: cantidad * precio del procedimiento
+        ganancia = cantidad * float(proc.costo)
+        
+        # Solo agregar procedimientos que tengan datos
+        if cantidad > 0:
+            ganancias_por_procedimiento.append({
+                'titulo': proc.titulo,
+                'ganancia': ganancia
+            })
+            cantidad_por_procedimiento.append({
+                'titulo': proc.titulo,
+                'cantidad': cantidad
+            })
+    
+    # Total de procedimientos realizados
+    total_procedimientos = sum([c['cantidad'] for c in cantidad_por_procedimiento])
+    
+    # Datos para el gráfico de pastel (veces realizado)
+    labels_veces = [c['titulo'] for c in cantidad_por_procedimiento]
+    data_veces = [c['cantidad'] for c in cantidad_por_procedimiento]
+    
+    context = {
+        'ganancias_totales': ganancias_totales,
+        'total_procedimientos': total_procedimientos,
+        'total_citas': total_citas,
+        'ganancias_por_procedimiento': ganancias_por_procedimiento,
+        'cantidad_por_procedimiento': cantidad_por_procedimiento,
+        'labels_veces': labels_veces,
+        'data_veces': data_veces,
+        'fecha_inicio': fecha_inicio or '',
+        'fecha_fin': fecha_fin or '',
+    }
+    return render(request, 'dashboard.html', context)
+
+def generar_pdf_citas(request, paciente_id):
+    paciente = get_object_or_404(Paciente, id=paciente_id)
+    
+    # Obtener solo las citas pagadas (realizadas)
+    citas_realizadas = Cita.objects.filter(
+        paciente=paciente,
+        pago__isnull=False
+    ).order_by('fecha')
+    
+    # Crear el buffer para el PDF
+    buffer = BytesIO()
+    
+    # Crear el documento PDF
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    elements = []
+    
+    # Estilos
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=18,
+        spaceAfter=30,
+        alignment=1,  # Centrado
+        textColor=colors.darkblue
+    )
+    
+    subtitle_style = ParagraphStyle(
+        'CustomSubtitle',
+        parent=styles['Heading2'],
+        fontSize=14,
+        spaceAfter=20,
+        alignment=1,  # Centrado
+        textColor=colors.darkgreen
+    )
+    
+    # Título principal
+    elements.append(Paragraph("Clínica Estética JyGDreams", title_style))
+    elements.append(Spacer(1, 20))
+    
+    # Información del paciente
+    elements.append(Paragraph(f"<b>Paciente:</b> {paciente.nombre} {paciente.apellido}", styles['Normal']))
+    elements.append(Paragraph(f"<b>Teléfono:</b> {paciente.telefono}", styles['Normal']))
+    elements.append(Paragraph(f"<b>Correo:</b> {paciente.correo}", styles['Normal']))
+    elements.append(Spacer(1, 20))
+    
+    # Subtítulo
+    elements.append(Paragraph("Citas Realizadas", subtitle_style))
+    elements.append(Spacer(1, 15))
+    
+    if citas_realizadas.exists():
+        # Preparar datos para la tabla
+        table_data = [
+            ['Fecha', 'Procedimientos', 'Precios', 'Total']
+        ]
+        
+        total_general = 0
+        
+        for cita in citas_realizadas:
+            # Obtener procedimientos de la cita
+            procedimientos_cita = cita.procedimientos.all()
+            
+            # Preparar información de procedimientos y precios
+            procedimientos_texto = []
+            precios_texto = []
+            total_cita = 0
+            
+            for proc in procedimientos_cita:
+                procedimientos_texto.append(proc.titulo)
+                precios_texto.append(f"C$ {proc.costo:,.2f}")
+                total_cita += float(proc.costo)
+            
+            # Formatear fecha
+            fecha_formateada = cita.fecha.strftime("%d/%m/%Y")
+            
+            # Agregar fila a la tabla
+            table_data.append([
+                fecha_formateada,
+                '\n'.join(procedimientos_texto),
+                '\n'.join(precios_texto),
+                f"C$ {total_cita:,.2f}"
+            ])
+            
+            total_general += total_cita
+        
+        # Agregar fila de total general
+        table_data.append(['', '', 'TOTAL GENERAL', f"C$ {total_general:,.2f}"])
+        
+        # Crear tabla
+        table = Table(table_data, colWidths=[1.2*inch, 2.5*inch, 1.5*inch, 1.2*inch])
+        
+        # Estilo de la tabla
+        table_style = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -2), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ALIGN', (0, 0), (0, -1), 'CENTER'),  # Fecha centrada
+            ('ALIGN', (1, 1), (1, -2), 'LEFT'),     # Procedimientos alineados a la izquierda
+            ('ALIGN', (2, 1), (2, -2), 'RIGHT'),    # Precios alineados a la derecha
+            ('ALIGN', (3, 1), (3, -2), 'RIGHT'),    # Total alineado a la derecha
+            ('FONTNAME', (0, 1), (-1, -2), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -2), 10),
+            ('BACKGROUND', (0, -1), (-1, -1), colors.lightblue),
+            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, -1), (-1, -1), 12),
+        ])
+        
+        table.setStyle(table_style)
+        elements.append(table)
+        
+        # Información adicional
+        elements.append(Spacer(1, 20))
+        elements.append(Paragraph(f"<b>Total de citas realizadas:</b> {citas_realizadas.count()}", styles['Normal']))
+        elements.append(Paragraph(f"<b>Fecha de generación:</b> {datetime.now().strftime('%d/%m/%Y %H:%M')}", styles['Normal']))
+        
+    else:
+        # Si no hay citas realizadas
+        elements.append(Paragraph("No hay citas realizadas para este paciente.", styles['Normal']))
+    
+    # Construir el PDF
+    doc.build(elements)
+    
+    # Obtener el valor del buffer
+    pdf = buffer.getvalue()
+    buffer.close()
+    
+    # Crear la respuesta HTTP
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="citas_realizadas_{paciente.apellido}_{paciente.nombre}.pdf"'
+    response.write(pdf)
+    
+    return response

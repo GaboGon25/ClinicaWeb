@@ -7,9 +7,14 @@
 <div class="container mt-5">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="fw-bold">Citas Registradas de {{ paciente.nombre }} {{ paciente.apellido }}</h2>
-    <a href="{% url 'agregar_cita' paciente.id %}" class="btn btn-primary shadow-sm rounded-pill px-4">
-      <i class="bi bi-calendar-plus"></i> Registrar Cita
-    </a>
+    <div class="d-flex gap-2">
+      <a href="{% url 'generar_pdf_citas' paciente.id %}" class="btn btn-success shadow-sm rounded-pill px-4" target="_blank">
+        <i class="bi bi-file-earmark-pdf"></i> Generar PDF
+      </a>
+      <a href="{% url 'agregar_cita' paciente.id %}" class="btn btn-primary shadow-sm rounded-pill px-4">
+        <i class="bi bi-calendar-plus"></i> Registrar Cita
+      </a>
+    </div>
   </div>
 
 
