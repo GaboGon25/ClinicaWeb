@@ -7,66 +7,81 @@
 {% endblock %}
 
 {% block content %}
-<div class="pacientes-container">
-    <div class="encabezado">
-        <h2>👥 Lista de Pacientes</h2>
-        <a href="{% url 'agregar_paciente' %}" class="btn-verde">
-            ➕ Agregar Paciente
-        </a>
-    </div>
+<div class="container py-5">
+  <h2 class="text-center mb-5 title"><i class="bi bi-person-fill me-2"></i>Lista de Pacientes</h2>
 
-    <form method="get" class="mb-4 p-3 search-bar-custom" autocomplete="off" style="max-width:500px; margin:auto;">
-      <div class="input-group">
-        <span class="input-group-text search-icon-bg"><i class="bi bi-search"></i></span>
-        <input type="text" name="q" id="busquedaPaciente" class="form-control border-emerald" placeholder="Buscar por nombre o apellido" value="{{ query }}">
+  <!-- Barra de búsqueda -->
+  <form method="get" class="mb-4 p-4 rounded shadow-sm search-bar-custom" autocomplete="off" style="max-width:900px; margin:auto;">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-8">
+        <label for="busquedaPaciente" class="form-label mb-1 fw-semibold" style="color:#2c3e50;">Buscar por nombre o apellido</label>
+        <div class="input-group">
+          <span class="input-group-text search-icon-bg"><i class="bi bi-search"></i></span>
+          <input type="text" name="q" id="busquedaPaciente" class="form-control border-emerald" placeholder="Nombre o apellido" value="{{ query }}">
+        </div>
+        <div id="sugerenciasPacientes" class="list-group position-absolute w-100" style="z-index:10;"></div>
       </div>
-      <div id="sugerenciasPacientes" class="list-group position-absolute w-100" style="z-index:10;"></div>
-      <div class="d-flex gap-2 mt-3">
+      <div class="col-md-2">
         <button type="submit" class="btn btn-outline-emerald w-100">
           <i class="bi bi-search me-1"></i> Buscar
         </button>
+      </div>
+      <div class="col-md-2">
         <a href="{% url 'tabla_paciente' %}" class="btn btn-outline-emerald w-100">
-          <i class="bi bi-arrow-clockwise me-1"></i> Volver
+          <i class="bi bi-arrow-clockwise me-1"></i> Limpiar
         </a>
       </div>
-    </form>
-
-    <div class="tabla-contenedor">
-        <table class="tabla-pacientes">
-            <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Apellido</th>
-                    <th>Fecha Nac.</th>
-                    <th>Ocupación</th>
-                    <th>Correo</th>
-                    <th>Teléfono</th>
-                    <th>Dirección</th>
-                    <th>Editar</th>
-                </tr>
-            </thead>
-            <tbody>
-  {% for paciente in pacientes %}
-    <tr>
-      <td>{{ paciente.nombre }}</td>
-      <td>{{ paciente.apellido }}</td>
-      <td>{{ paciente.fecha_nacimiento|date:"d/m/Y" }}</td>
-      <td>{{ paciente.ocupacion }}</td>
-      <td>{{ paciente.correo }}</td>
-      <td>{{ paciente.telefono }}</td>
-      <td>{{ paciente.direccion }}</td>
-      <td>
-        <a href="{% url 'editar_paciente' paciente.id %}" class="btn-editar">✏️ Editar</a>
-      </td>
-    </tr>
-  {% empty %}
-    <tr>
-      <td colspan="8" class="text-center">No hay pacientes registrados.</td>
-    </tr>
-  {% endfor %}
-</tbody>
-        </table>
     </div>
+  </form>
+
+  <!-- Botón agregar paciente -->
+  <div class="text-center mb-4">
+    <a href="{% url 'agregar_paciente' %}" class="btn btn-outline-emerald btn-lg">
+      <i class="bi bi-plus-circle me-2"></i>Agregar Paciente
+    </a>
+  </div>
+
+  <!-- Tabla de pacientes -->
+  <div class="tabla-contenedor">
+    <table class="tabla-pacientes">
+      <thead>
+        <tr>
+          <th><i class="bi bi-person me-1"></i>Nombre</th>
+          <th><i class="bi bi-person me-1"></i>Apellido</th>
+          <th><i class="bi bi-calendar me-1"></i>Fecha Nac.</th>
+          <th><i class="bi bi-briefcase me-1"></i>Ocupación</th>
+          <th><i class="bi bi-envelope me-1"></i>Correo</th>
+          <th><i class="bi bi-telephone me-1"></i>Teléfono</th>
+          <th><i class="bi bi-geo-alt me-1"></i>Dirección</th>
+          <th><i class="bi bi-pencil me-1"></i>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for paciente in pacientes %}
+        <tr>
+          <td>{{ paciente.nombre }}</td>
+          <td>{{ paciente.apellido }}</td>
+          <td>{{ paciente.fecha_nacimiento|date:"d/m/Y" }}</td>
+          <td>{{ paciente.ocupacion }}</td>
+          <td>{{ paciente.correo }}</td>
+          <td>{{ paciente.telefono }}</td>
+          <td>{{ paciente.direccion }}</td>
+          <td>
+            <a href="{% url 'editar_paciente' paciente.id %}" class="btn-editar">
+              <i class="bi bi-pencil-square me-1"></i>Editar
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="text-center texto-vacio">
+            <i class="bi bi-inbox me-2"></i>No hay pacientes registrados.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
