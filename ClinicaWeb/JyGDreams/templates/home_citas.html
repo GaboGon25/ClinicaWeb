@@ -17,62 +17,29 @@
     </div>
   </div>
 
-
-  <div class="row g-4">
-    {% if citas %}
-      {% for cita in citas %}
-        <div class="col-12 col-md-6 col-lg-4">
-          <div class="modern-card border-left-{{ cita.estado|lower }} card-link position-relative" data-href="{% url 'detalle_cita' cita.id %}">
-            <div class="card-body">
-              <h5 class="card-title">
-                {% for proc in cita.procedimientos.all %}
-                  {{ proc.titulo }}{% if not forloop.last %}, {% endif %}
-                {% empty %}
-                  Sin procedimiento
-                {% endfor %}
-              </h5>
-              <p class="card-text mb-1"><strong>Fecha:</strong> {{ cita.fecha|date:"d/m/Y" }}</p>
-              <p class="card-text mb-1"><strong>Hora:</strong> {{ cita.hora|time:"H:i" }}</p>
-              <span class="status-badge bg-{{ cita.estado|lower }}">{{ cita.get_estado_display }}</span>
+  <!-- Filtro por estado -->
+  <form method="get" class="mb-4 p-4 rounded shadow-sm search-bar-custom" autocomplete="off" style="max-width:600px; margin:auto;">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-8">
+        <label for="estadoCita" class="form-label mb-1 fw-semibold" style="color:#2c3e50;">Estado de la cita</label>
+        <select name="estado" id="estadoCita" class="form-select border-emerald">
+          <option value="">Todos los estados</option>
+          <option value="AGENDADO" {% if estado == 'AGENDADO' %}selected{% endif %}>Agendado</option>
+          <option value="REPROGRAMADO" {% if estado == 'REPROGRAMADO' %}selected{% endif %}>Reprogramado</option>
+          <option value="REALIZADO" {% if estado == 'REALIZADO' %}selected{% endif %}>Realizado</option>
+          <option value="INASISTENCIA" {% if estado == 'INASISTENCIA' %}selected{% endif %}>Inasistencia</option>
+        </select>
             </div>
-            <div class="dropdown position-absolute bottom-0 end-0 m-3">
-              <button class="btn btn-light btn-pay dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                <i class="bi bi-currency-dollar"></i>
-              </button>
-              <ul class="dropdown-menu">
-                {% if cita.pago_set.all %}
-                  <li>
-                    <button class="dropdown-item" disabled>
-                      <i class="bi bi-currency-dollar me-2 text-primary"></i>Pago ya registrado
-                    </button>
-                  </li>
-                  <li>
-                    <a class="dropdown-item" href="{% url 'detalle_pago' cita.id %}">
-                      <i class="bi bi-eye me-2 text-secondary"></i>Detalle de Pago
-                    </a>
-                  </li>
-                {% else %}
-                  <li>
-                    <a class="dropdown-item" href="{% url 'agregar_pago' cita.id %}">
-                      <i class="bi bi-currency-dollar me-2 text-primary"></i>Registrar Pago
-                    </a>
-                  </li>
-                  <li>
-                    <button class="dropdown-item btn-detalle-pago" type="button">
-                      <i class="bi bi-eye me-2 text-secondary"></i>Detalle de Pago
-                    </button>
-                  </li>
-                {% endif %}
-              </ul>
-            </div>
-          </div>
-        </div>
-      {% endfor %}
-    {% else %}
-      <div class="col-12">
-        <div class="alert alert-info text-center">No hay citas registradas para este paciente.</div>
+      <div class="col-md-4 d-flex align-items-end">
+        <a href="{% url 'home_citas' paciente.id %}" class="btn btn-outline-emerald w-100" title="Mostrar todas">
+          <i class="bi bi-arrow-clockwise"></i> Limpiar
+        </a>
       </div>
-    {% endif %}
+    </div>
+  </form>
+
+  <div id="citas-block">
+    {% include 'partials/citas_block.html' %}
   </div>
 </div>
 
@@ -91,6 +58,56 @@
 {% block extra_js %}
 <script>
   document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector('form');
+    const estadoSelect = document.getElementById('estadoCita');
+    const citasBlock = document.getElementById('citas-block');
+
+    function filtrarCitasAjax(extraParams = {}) {
+      const params = new URLSearchParams(new FormData(form));
+      // Añade parámetros extra (como page)
+      for (const key in extraParams) {
+        params.set(key, extraParams[key]);
+      }
+      
+      fetch("{% url 'ajax_filtrar_citas' paciente.id %}?" + params.toString())
+        .then(response => response.json())
+        .then(data => {
+          citasBlock.innerHTML = data.html;
+          // Re-inicializar eventos después de actualizar el contenido
+          initializeCardEvents();
+        });
+    }
+
+    // Filtrado al cambiar el estado
+    estadoSelect.addEventListener('change', () => filtrarCitasAjax());
+
+    // Evitar el submit clásico
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      filtrarCitasAjax();
+    });
+
+    // Delegación para paginación AJAX
+    citasBlock.addEventListener('click', function(e) {
+      if (e.target.classList.contains('page-ajax') || e.target.closest('.page-ajax')) {
+        e.preventDefault();
+        const link = e.target.classList.contains('page-ajax') ? e.target : e.target.closest('.page-ajax');
+        const url = new URL(link.href, window.location.origin);
+        const page = url.searchParams.get('page');
+        const estado = url.searchParams.get('estado');
+        
+        filtrarCitasAjax({
+          page: page,
+          estado: estado
+        });
+        
+        // Scroll al inicio de las citas
+        citasBlock.scrollIntoView({behavior: "smooth"});
+      }
+    });
+
+    function initializeCardEvents() {
+      // Funcionalidad de las cards
     document.querySelectorAll('.card-link').forEach(function (card) {
       card.addEventListener('click', function (e) {
         if (
@@ -116,6 +133,10 @@
         });
       });
     });
+    }
+
+    // Inicializar eventos al cargar la página
+    initializeCardEvents();
   });
 </script>
 {% endblock %}

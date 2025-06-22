@@ -6,20 +6,88 @@
 
 <div class="container py-5">
   <h2 class="text-center mb-5 title"><i class="bi bi-journal-medical me-2"></i>Expedientes Registrados</h2>
-  <div class="row g-4">
-    {% for paciente in pacientes %}
-      {% cycle 'bg1' 'bg2' 'bg3' 'bg4' 'bg5' as color_class silent %}
-      <div class="col-sm-12 col-md-6 col-lg-4 d-flex">
-        <a href="{% url 'seleccionar_exp' paciente.id %}" class="card-link flex-fill">
-          <div class="paciente-card {{ color_class }} h-100">
-            <div class="card-body d-flex flex-column justify-content-center align-items-start">
-              <h5 class="card-title mb-2">{{ paciente.nombre }} {{ paciente.apellido }}</h5>
-              <p class="card-text"><i class="bi bi-briefcase-fill me-2"></i>{{ paciente.ocupacion }}</p>
-            </div>
-          </div>
+
+  <!-- Barra de búsqueda y filtros -->
+  <form method="get" class="mb-4 p-4 rounded shadow-sm search-bar-custom" autocomplete="off" style="max-width:900px; margin:auto;">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-5">
+        <label for="busquedaPaciente" class="form-label mb-1 fw-semibold" style="color:#2c3e50;">Buscar por nombre</label>
+        <div class="input-group">
+          <span class="input-group-text search-icon-bg"><i class="bi bi-search"></i></span>
+          <input type="text" name="q" id="busquedaPaciente" class="form-control border-emerald" placeholder="Nombre o apellido" value="{{ query }}">
+        </div>
+      </div>
+      <div class="col-md-4">
+        <label for="tieneExpediente" class="form-label mb-1 fw-semibold" style="color:#2c3e50;">Estado del expediente</label>
+        <select name="tiene_expediente" id="tieneExpediente" class="form-select border-emerald">
+          <option value="">Todos los pacientes</option>
+          <option value="si" {% if tiene_expediente == 'si' %}selected{% endif %}>Con expediente</option>
+          <option value="no" {% if tiene_expediente == 'no' %}selected{% endif %}>Sin expediente</option>
+        </select>
+      </div>
+      <div class="col-md-3 d-flex align-items-end">
+        <a href="{% url 'expediente_pacientes' %}" class="btn btn-outline-emerald w-100" title="Mostrar todos">
+          <i class="bi bi-arrow-clockwise"></i> Limpiar
         </a>
       </div>
-    {% endfor %}
+    </div>
+  </form>
+
+  <div id="expedientes-block">
+    {% include 'partials/expedientes_block.html' %}
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.querySelector('form');
+  const inputs = form.querySelectorAll('input, select');
+  const expedientesBlock = document.getElementById('expedientes-block');
+
+  function filtrarAjax(extraParams = {}) {
+    const params = new URLSearchParams(new FormData(form));
+    // Añade parámetros extra (como page)
+    for (const key in extraParams) {
+      params.set(key, extraParams[key]);
+    }
+    fetch("{% url 'ajax_filtrar_expedientes' %}?" + params.toString())
+      .then(response => response.json())
+      .then(data => {
+        expedientesBlock.innerHTML = data.html;
+      });
+  }
+
+  // Autofiltrado al escribir o cambiar cualquier campo
+  inputs.forEach(input => {
+    input.addEventListener('input', () => filtrarAjax());
+    input.addEventListener('change', () => filtrarAjax());
+  });
+
+  // Evitar el submit clásico
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    filtrarAjax();
+  });
+
+  // Delegación para paginación AJAX
+  expedientesBlock.addEventListener('click', function(e) {
+    if (e.target.classList.contains('page-ajax')) {
+      e.preventDefault();
+      const url = new URL(e.target.href, window.location.origin);
+      const page = url.searchParams.get('page');
+      const query = url.searchParams.get('q');
+      const tiene_expediente = url.searchParams.get('tiene_expediente');
+      
+      filtrarAjax({
+        page: page,
+        q: query,
+        tiene_expediente: tiene_expediente
+      });
+      
+      // Scroll al inicio de las cards (opcional)
+      expedientesBlock.scrollIntoView({behavior: "smooth"});
+    }
+  });
+});
+</script>
 {% endblock %}

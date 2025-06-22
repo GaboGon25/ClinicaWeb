@@ -136,3 +136,98 @@ body {
   color: #2d3436;
   font-weight: 500;
 }
+
+/* === ESTILOS DEL FILTRO (copiados de cards_patient.css) === */
+.search-bar-custom {
+  background: rgba(255,255,255,0.18); /* Fondo translúcido */
+  border: none;
+  border-radius: 1.2rem;
+  box-shadow: 0 4px 24px rgba(44, 62, 80, 0.08);
+  backdrop-filter: blur(12px); /* Efecto cristal */
+  -webkit-backdrop-filter: blur(12px);
+  padding: 2rem 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.input-group-text.search-icon-bg {
+  background: var(--emerald-light);
+  color: var(--emerald-dark);
+  border-right: 0;
+}
+
+/* === INPUTS Y SELECTS INTEGRADOS AL FONDO === */
+.form-control.border-emerald,
+.form-select.border-emerald {
+  background: rgba(255, 255, 255, 0.18) !important; /* Muy transparente */
+  border: none !important;
+  border-radius: 1rem !important;
+  color: #2c3e50 !important;
+  font-weight: 500 !important;
+  backdrop-filter: blur(8px) !important; /* Efecto cristal */
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.08) !important;
+  transition: background 0.2s, box-shadow 0.2s !important;
+}
+
+.form-control.border-emerald::placeholder {
+  color: #2c3e50 !important;
+  opacity: 0.6 !important;
+}
+
+.form-control.border-emerald:focus,
+.form-select.border-emerald:focus {
+  background: rgba(255,255,255,0.28) !important;
+  outline: 2px solid var(--emerald-green) !important;
+  box-shadow: 0 4px 16px rgba(46,204,113,0.10) !important;
+  border: none !important;
+}
+
+.btn-outline-emerald {
+  border: 2px solid var(--emerald-green);
+  color: var(--emerald-green);
+  background: transparent;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-outline-emerald:hover,
+.btn-outline-emerald:focus {
+  background: var(--emerald-green);
+  color: #fff;
+}
+
+@media (min-width: 768px) {
+  .w-md-auto {
+    width: auto !important;
+  }
+}
+
+/* === ESTILOS DE PAGINACIÓN === */
+.pagination .page-link {
+  color: var(--emerald-green, #2ecc71);
+  background: rgba(163, 228, 215, 0.25);
+  border: none;
+  margin: 0 2px;
+  border-radius: 0.7rem;
+  font-weight: 600;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.07);
+}
+
+.pagination .page-link:hover,
+.pagination .page-link:focus {
+  background: var(--emerald-green, #2ecc71);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(46,204,113,0.10);
+}
+
+.pagination .page-item.active .page-link {
+  background: var(--emerald-dark, #27ae60);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 16px rgba(46,204,113,0.15);
+}
+
+.pagination .page-item.disabled .page-link {
+  background: #e3f2fd;
+  color: #b2bec3;
+  border: none;
+}

@@ -97,8 +97,34 @@ def editar_paciente(request, paciente_id):
     return render(request, 'edit_patient.html', {'paciente': paciente})
 
 def expediente_pacientes(request):
+    query = request.GET.get('q', '')
+    tiene_expediente = request.GET.get('tiene_expediente', '')
+    
     pacientes = Paciente.objects.all()
-    return render(request, 'cards_expediente.html', {'pacientes': pacientes})
+    
+    # Filtro por nombre/apellido
+    if query:
+        pacientes = pacientes.filter(
+            Q(nombre__icontains=query) | Q(apellido__icontains=query)
+        )
+    
+    # Filtro por si tiene expediente o no
+    if tiene_expediente == 'si':
+        pacientes = pacientes.filter(expediente__isnull=False)
+    elif tiene_expediente == 'no':
+        pacientes = pacientes.filter(expediente__isnull=True)
+    
+    # Paginación
+    paginator = Paginator(pacientes, 9)  # 9 pacientes por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'cards_expediente.html', {
+        'pacientes': page_obj.object_list,
+        'page_obj': page_obj,
+        'query': query,
+        'tiene_expediente': tiene_expediente,
+    })
 
 def agregar_expediente(request, paciente_id):
     paciente = get_object_or_404(Paciente, id=paciente_id)
@@ -422,9 +448,24 @@ def agregar_cita(request, paciente_id):
 def home_citas(request, paciente_id):
     paciente = get_object_or_404(Paciente, id=paciente_id)
     citas = Cita.objects.filter(paciente=paciente).order_by('-fecha', '-hora')
+    
+    # Obtener parámetro de filtro por estado
+    estado = request.GET.get('estado', '')
+    
+    # Aplicar filtro por estado
+    if estado:
+        citas = citas.filter(estado=estado)
+    
+    # Paginación
+    paginator = Paginator(citas, 9)  # 9 citas por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
     return render(request, 'home_citas.html', {
         'paciente': paciente,
-        'citas': citas,
+        'citas': page_obj.object_list,
+        'page_obj': page_obj,
+        'estado': estado,
     })
 
 
@@ -780,3 +821,67 @@ def generar_pdf_citas(request, paciente_id):
     response.write(pdf)
     
     return response
+
+def ajax_filtrar_citas(request, paciente_id):
+    paciente = get_object_or_404(Paciente, id=paciente_id)
+    citas = Cita.objects.filter(paciente=paciente).order_by('-fecha', '-hora')
+    
+    # Obtener parámetros
+    estado = request.GET.get('estado', '')
+    page_number = request.GET.get('page', 1)
+    
+    # Aplicar filtro por estado
+    if estado:
+        citas = citas.filter(estado=estado)
+    
+    # Paginación
+    paginator = Paginator(citas, 9)  # 9 citas por página
+    page_obj = paginator.get_page(page_number)
+    
+    # Renderiza el bloque parcial con paginación y filtros
+    html = render_to_string(
+        'partials/citas_block.html',
+        {
+            'citas': page_obj.object_list,
+            'page_obj': page_obj,
+            'estado': estado,
+        },
+        request=request
+    )
+    return JsonResponse({'html': html})
+
+def ajax_filtrar_expedientes(request):
+    query = request.GET.get('q', '')
+    tiene_expediente = request.GET.get('tiene_expediente', '')
+    page_number = request.GET.get('page', 1)
+    
+    pacientes = Paciente.objects.all()
+    
+    # Filtro por nombre/apellido
+    if query:
+        pacientes = pacientes.filter(
+            Q(nombre__icontains=query) | Q(apellido__icontains=query)
+        )
+    
+    # Filtro por si tiene expediente o no
+    if tiene_expediente == 'si':
+        pacientes = pacientes.filter(expediente__isnull=False)
+    elif tiene_expediente == 'no':
+        pacientes = pacientes.filter(expediente__isnull=True)
+    
+    # Paginación
+    paginator = Paginator(pacientes, 9)  # 9 pacientes por página
+    page_obj = paginator.get_page(page_number)
+    
+    # Renderiza el bloque parcial con paginación y filtros
+    html = render_to_string(
+        'partials/expedientes_block.html',
+        {
+            'pacientes': page_obj.object_list,
+            'page_obj': page_obj,
+            'query': query,
+            'tiene_expediente': tiene_expediente,
+        },
+        request=request
+    )
+    return JsonResponse({'html': html})
