@@ -19,23 +19,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const btnAgregar = document.getElementById('btnAgregar');
   const formAgregar = document.getElementById('formAgregarPaciente');
 
-  if (btnAgregar && formAgregar) {
-    btnAgregar.addEventListener('click', function () {
-      Swal.fire({
-        title: '¿Agregar paciente?',
-        text: "Los datos serán guardados",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#198754',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, agregar',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          formAgregar.submit();
-        }
-      });
-    });
-  }
+  
 
 });
