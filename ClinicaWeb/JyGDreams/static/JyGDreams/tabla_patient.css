@@ -82,77 +82,99 @@ body {
 
 /* === CONTENEDOR DE TABLA === */
 .tabla-contenedor {
-    background: rgba(255, 255, 255, 0.18);
-    border-radius: 1.2rem;
-    box-shadow: 0 4px 24px rgba(44, 62, 80, 0.08);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    padding: 2rem;
+    background: rgba(255, 255, 255, 0.22);
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 32px rgba(44, 62, 80, 0.12);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 2.5rem 1.5rem;
     overflow-x: auto;
-    margin-top: 2rem;
+    margin-top: 2.5rem;
+    border: 1.5px solid var(--emerald-light);
 }
 
 /* === TABLA PRINCIPAL === */
 .tabla-pacientes {
     width: 100%;
-    border-collapse: collapse;
-    font-size: 1.05em;
-    min-width: 800px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 1rem;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 1.08em;
+    min-width: 900px;
+    background: rgba(255, 255, 255, 0.13);
+    border-radius: 1.2rem;
     overflow: hidden;
+    box-shadow: 0 2px 12px rgba(44, 62, 80, 0.07);
 }
 
 .tabla-pacientes th,
 .tabla-pacientes td {
-    padding: 1.2rem 1.5rem;
+    padding: 1.3rem 1.5rem;
     text-align: left;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1.5px solid rgba(46, 204, 113, 0.10);
 }
 
 .tabla-pacientes th {
-    background: rgba(46, 204, 113, 0.15);
-    color: #2c3e50;
-    font-weight: 700;
-    font-size: 1.1em;
+    background: rgba(46, 204, 113, 0.22);
+    color: #1a242f;
+    font-weight: 800;
+    font-size: 1.13em;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.7px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    box-shadow: 0 2px 8px rgba(46, 204, 113, 0.04);
 }
 
 .tabla-pacientes th i {
     color: var(--emerald-dark);
+    font-size: 1.25em;
+    vertical-align: middle;
+    margin-right: 0.2em;
 }
 
 .tabla-pacientes tr {
-    transition: background 0.3s ease;
+    transition: background 0.25s, box-shadow 0.25s;
 }
 
 .tabla-pacientes tr:hover {
-    background: rgba(46, 204, 113, 0.08);
+    background: rgba(46, 204, 113, 0.16);
+    box-shadow: 0 4px 16px rgba(46, 204, 113, 0.10);
 }
 
 .tabla-pacientes td {
     color: #2c3e50;
     font-weight: 500;
+    vertical-align: middle;
+    font-size: 1.05em;
 }
 
 /* === BOTÓN EDITAR === */
 .btn-editar {
     color: var(--emerald-green);
-    background: rgba(46, 204, 113, 0.1);
-    padding: 0.5rem 1rem;
-    border-radius: 0.8rem;
-    font-weight: 600;
+    background: rgba(46, 204, 113, 0.13);
+    padding: 0.6rem 1.2rem;
+    border-radius: 1rem;
+    font-weight: 700;
     text-decoration: none;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(46, 204, 113, 0.2);
+    transition: all 0.25s;
+    border: 1.5px solid rgba(46, 204, 113, 0.22);
+    font-size: 1.08em;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+}
+
+.btn-editar i {
+    font-size: 1.2em;
+    margin-right: 0.2em;
 }
 
 .btn-editar:hover {
     background: var(--emerald-green);
     color: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 4px 16px rgba(46, 204, 113, 0.18);
     text-decoration: none;
 }
 
@@ -163,13 +185,13 @@ body {
     font-style: italic;
     color: #7f8c8d;
     font-size: 1.2em;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.09);
     border-radius: 0.8rem;
 }
 
 .texto-vacio i {
     color: var(--emerald-light);
-    font-size: 1.5em;
+    font-size: 1.7em;
 }
 
 /* === SUGERENCIAS DE BÚSQUEDA === */
@@ -186,40 +208,26 @@ body {
 }
 
 /* === RESPONSIVE DESIGN === */
-@media screen and (max-width: 768px) {
-    .title {
-        font-size: 2rem;
-    }
-    
-    .tabla-contenedor {
-        padding: 1rem;
-        margin: 1rem;
-    }
-    
+@media screen and (max-width: 900px) {
     .tabla-pacientes {
-        font-size: 0.95em;
         min-width: 600px;
+        font-size: 0.98em;
     }
-    
-    .tabla-pacientes th,
-    .tabla-pacientes td {
-        padding: 0.8rem 1rem;
+    .tabla-contenedor {
+        padding: 1rem 0.2rem;
     }
 }
 
-@media screen and (max-width: 480px) {
-    .title {
-        font-size: 1.8rem;
-    }
-    
+@media screen and (max-width: 600px) {
     .tabla-pacientes {
-        font-size: 0.9em;
-        min-width: 500px;
+        min-width: 400px;
+        font-size: 0.93em;
     }
-    
-    .btn-outline-emerald {
-        font-size: 0.9em;
-        padding: 0.5rem 1rem;
+    .tabla-contenedor {
+        padding: 0.5rem 0.1rem;
+    }
+    .tabla-pacientes th, .tabla-pacientes td {
+        padding: 0.7rem 0.5rem;
     }
 }
 

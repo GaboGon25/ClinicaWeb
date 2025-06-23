@@ -43,32 +43,32 @@
 
   <!-- Tabla de pacientes -->
   <div class="tabla-contenedor">
-    <table class="tabla-pacientes">
-      <thead>
+    <table class="tabla-pacientes table table-hover align-middle shadow-sm rounded-4 overflow-hidden">
+      <thead class="bg-gradient" style="background: linear-gradient(90deg, #a3e4d7 0%, #2ecc71 100%); box-shadow: 0 2px 8px rgba(44,62,80,0.08);">
         <tr>
-          <th><i class="bi bi-person me-1"></i>Nombre</th>
-          <th><i class="bi bi-person me-1"></i>Apellido</th>
-          <th><i class="bi bi-calendar me-1"></i>Fecha Nac.</th>
-          <th><i class="bi bi-briefcase me-1"></i>Ocupación</th>
-          <th><i class="bi bi-envelope me-1"></i>Correo</th>
-          <th><i class="bi bi-telephone me-1"></i>Teléfono</th>
-          <th><i class="bi bi-geo-alt me-1"></i>Dirección</th>
-          <th><i class="bi bi-pencil me-1"></i>Acciones</th>
+          <th class="text-center py-3 rounded-start-4"><i class="bi bi-person fs-5 me-2"></i>Nombre</th>
+          <th class="text-center py-3"><i class="bi bi-person fs-5 me-2"></i>Apellido</th>
+          <th class="text-center py-3"><i class="bi bi-calendar fs-5 me-2"></i>Fecha Nac.</th>
+          <th class="text-center py-3"><i class="bi bi-briefcase fs-5 me-2"></i>Ocupación</th>
+          <th class="text-center py-3"><i class="bi bi-envelope fs-5 me-2"></i>Correo</th>
+          <th class="text-center py-3"><i class="bi bi-telephone fs-5 me-2"></i>Teléfono</th>
+          <th class="text-center py-3"><i class="bi bi-geo-alt fs-5 me-2"></i>Dirección</th>
+          <th class="text-center py-3 rounded-end-4"><i class="bi bi-pencil fs-5 me-2"></i>Acciones</th>
         </tr>
       </thead>
       <tbody>
         {% for paciente in pacientes %}
-        <tr>
-          <td>{{ paciente.nombre }}</td>
-          <td>{{ paciente.apellido }}</td>
-          <td>{{ paciente.fecha_nacimiento|date:"d/m/Y" }}</td>
-          <td>{{ paciente.ocupacion }}</td>
-          <td>{{ paciente.correo }}</td>
-          <td>{{ paciente.telefono }}</td>
-          <td>{{ paciente.direccion }}</td>
-          <td>
-            <a href="{% url 'editar_paciente' paciente.id %}" class="btn-editar">
-              <i class="bi bi-pencil-square me-1"></i>Editar
+        <tr class="bg-white bg-opacity-75 border-bottom">
+          <td class="text-center fw-semibold">{{ paciente.nombre }}</td>
+          <td class="text-center">{{ paciente.apellido }}</td>
+          <td class="text-center">{{ paciente.fecha_nacimiento|date:"d/m/Y" }}</td>
+          <td class="text-center">{{ paciente.ocupacion }}</td>
+          <td class="text-center">{{ paciente.correo }}</td>
+          <td class="text-center">{{ paciente.telefono }}</td>
+          <td class="text-center">{{ paciente.direccion }}</td>
+          <td class="text-center">
+            <a href="{% url 'editar_paciente' paciente.id %}" class="btn btn-outline-success btn-sm rounded-pill px-3 d-inline-flex align-items-center gap-1 shadow-sm">
+              <i class="bi bi-pencil-square fs-5"></i> Editar
             </a>
           </td>
         </tr>
