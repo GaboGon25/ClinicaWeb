@@ -99,8 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
   Swal.fire({
     icon: 'success',
     title: '{% for message in messages %}{{ message }}{% endfor %}',
-    showConfirmButton: false,
-    timer: 2000
+    showConfirmButton: true,
   });
 </script>
 {% endif %}

@@ -121,16 +121,14 @@ document.addEventListener('DOMContentLoaded', function() {
     Swal.fire({
       icon: 'success',
       title: '¡Expediente registrado correctamente!',
-      showConfirmButton: false,
-      timer: 1800
+      showConfirmButton: true,
     });
   }
   if (params.get('edited')) {
     Swal.fire({
       icon: 'success',
       title: '¡Expediente editado correctamente!',
-      showConfirmButton: false,
-      timer: 1800
+      showConfirmButton: true,
     });
   }
 });
