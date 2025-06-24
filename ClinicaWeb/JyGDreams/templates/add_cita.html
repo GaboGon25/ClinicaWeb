@@ -54,7 +54,7 @@
       <div class="row mb-4" id="otroProcedimiento" style="display: none;">
         <div class="col-md-6">
           <label class="form-label">Procedimiento</label>
-          <select class="form-select" name="procedimiento2" id="procedimiento2" disabled>
+          <select class="form-select" name="procedimiento2" id="procedimiento2" disabled required>
             <option value="" disabled selected>Seleccione un procedimiento</option>
             {% for procedimiento in procedimientos %}
               <option value="{{ procedimiento.id }}">{{ procedimiento.titulo }}</option>
@@ -90,7 +90,7 @@
 
       <div class="mb-4">
         <label class="form-label">Motivo</label>
-        <textarea class="form-control" name="motivo" rows="3" placeholder="Escriba el motivo de la cita..."></textarea>
+        <textarea class="form-control" name="motivo" rows="3" placeholder="Escriba el motivo de la cita..." required></textarea>
       </div>
 
       <div class="d-grid">

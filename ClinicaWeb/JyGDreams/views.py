@@ -10,12 +10,14 @@ from django.forms import modelformset_factory
 from django.db.models import Q, Exists, OuterRef, Subquery, Sum, Count, F
 from django.core.paginator import Paginator
 from reportlab.lib.pagesizes import letter, A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 from io import BytesIO
 from datetime import datetime
+import os
+from django.conf import settings
 
 #def login(request):
     #return render(request, 'login.html')
@@ -707,7 +709,7 @@ def generar_pdf_citas(request, paciente_id):
         fontSize=18,
         spaceAfter=30,
         alignment=1,  # Centrado
-        textColor=colors.darkblue
+        textColor=colors.darkgreen  # Cambiado a verde
     )
     
     subtitle_style = ParagraphStyle(
@@ -719,12 +721,27 @@ def generar_pdf_citas(request, paciente_id):
         textColor=colors.darkgreen
     )
     
+    # Agregar logo justo arriba del título principal
+    logo_path = os.path.join(settings.STATIC_ROOT, 'JyGDreams', 'img', 'icon-clinica.png')
+    # Si no existe en STATIC_ROOT, usar STATICFILES_DIRS o la ruta relativa
+    if not os.path.exists(logo_path):
+        logo_path = os.path.join(settings.BASE_DIR, 'JyGDreams', 'static', 'JyGDreams', 'img', 'icon-clinica.png')
+    
+    if os.path.exists(logo_path):
+        # Crear imagen con tamaño apropiado (1 pulgada de ancho)
+        logo = Image(logo_path, width=1*inch, height=1*inch)
+        # Posicionar centrado
+        logo.hAlign = 'CENTER'
+        elements.append(logo)
+        elements.append(Spacer(1, 10))  # Espacio después del logo
+    
     # Título principal
     elements.append(Paragraph("Clínica Estética JyGDreams", title_style))
     elements.append(Spacer(1, 20))
     
     # Información del paciente
     elements.append(Paragraph(f"<b>Paciente:</b> {paciente.nombre} {paciente.apellido}", styles['Normal']))
+    elements.append(Paragraph(f"<b>Ocupación:</b> {paciente.ocupacion}", styles['Normal']))
     elements.append(Paragraph(f"<b>Teléfono:</b> {paciente.telefono}", styles['Normal']))
     elements.append(Paragraph(f"<b>Correo:</b> {paciente.correo}", styles['Normal']))
     elements.append(Spacer(1, 20))
