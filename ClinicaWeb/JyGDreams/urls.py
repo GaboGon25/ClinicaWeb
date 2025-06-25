@@ -17,9 +17,6 @@ urlpatterns = [
     path('ajax/filtrar-expedientes/', views.ajax_filtrar_expedientes, name='ajax_filtrar_expedientes'),
     path('paciente/<int:paciente_id>/seleccionar_exp/', views.seleccionar_exp, name='seleccionar_exp'),
     path('cita_pacientes/', views.cita_pacientes, name='cita_pacientes'),
-    #path('cuadros_citas/', views.cuadros_citas, name='cuadros_citas'),
-    #path('agregar_cita/', views.agregar_cita, name='agregar_cita'),
-    #path('detalle_cita/', views.detalle_cita, name='detalle_cita'),
     path('detalle_cita/<int:cita_id>/', views.detalle_cita, name='detalle_cita'),
     path('editar_cita/<int:cita_id>/', views.editar_cita, name='editar_cita'),
     path('login/', views.login_view, name='login'),
@@ -33,4 +30,5 @@ urlpatterns = [
     path('ajax/filtrar-pacientes/', views.ajax_filtrar_pacientes, name='ajax_filtrar_pacientes'),
     path('estadisticas/', views.estadisticas, name='estadisticas'),
     path('paciente/<int:paciente_id>/pdf-citas/', views.generar_pdf_citas, name='generar_pdf_citas'),
+    path('expediente/<int:expediente_id>/pdf/', views.generar_pdf_expediente, name='generar_pdf_expediente'),
 ]

@@ -13,7 +13,7 @@
       </h2>
     </div>
     <div class="col-auto d-flex flex-column flex-md-row gap-2 justify-content-center">
-      <a href="{% url 'generar_pdf_citas' paciente.id %}" class="btn btn-success shadow-sm rounded-pill px-4 py-2 d-flex align-items-center gap-2 w-100 w-md-auto" target="_blank">
+      <a href="{% url 'generar_pdf_citas' paciente.id %}" class="btn btn-danger shadow-sm rounded-pill px-4 py-2 d-flex align-items-center gap-2 w-100 w-md-auto" target="_blank">
         <i class="bi bi-file-earmark-pdf fs-5"></i> <span class="fw-semibold">Generar PDF</span>
       </a>
       <a href="{% url 'agregar_cita' paciente.id %}" class="btn btn-primary shadow-sm rounded-pill px-4 py-2 d-flex align-items-center gap-2 w-100 w-md-auto">

@@ -948,3 +948,178 @@ def ajax_filtrar_expedientes(request):
         request=request
     )
     return JsonResponse({'html': html})
+
+def generar_pdf_expediente(request, expediente_id):
+    expediente = get_object_or_404(Expediente, id=expediente_id)
+    paciente = expediente.paciente
+    habito = Habito.objects.filter(expediente=expediente).first()
+    biotipo = ExpedienteBiotipo.objects.filter(expediente=expediente).first()
+    cuidados = ExpedienteCuidadoPiel.objects.filter(expediente=expediente)
+    cuidados_nombres = [c.cuidado.nombre for c in cuidados]
+    otro_valor = ""
+    for c in cuidados:
+        if c.cuidado.nombre == "Otros":
+            otro_valor = c.otro
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=30)
+    elements = []
+
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=20,
+        spaceAfter=18,
+        alignment=1,
+        textColor=colors.white,
+        backColor=colors.HexColor('#198754'),
+        leading=24,
+        borderPadding=(8, 8, 8, 8),
+    )
+    subtitle_style = ParagraphStyle(
+        'CustomSubtitle',
+        parent=styles['Heading2'],
+        fontSize=14,
+        spaceAfter=12,
+        alignment=0,
+        textColor=colors.HexColor('#198754'),
+        leading=18,
+    )
+    section_title = ParagraphStyle(
+        'SectionTitle',
+        parent=styles['Heading3'],
+        fontSize=12,
+        textColor=colors.HexColor('#198754'),
+        spaceAfter=8,
+        spaceBefore=12,
+        leading=16,
+    )
+    normal_style = ParagraphStyle(
+        'Normal',
+        parent=styles['Normal'],
+        fontSize=10.5,
+        leading=14,
+    )
+
+    # Cabecera con fondo y logo
+    header_table_data = []
+    logo_path = os.path.join(settings.STATIC_ROOT, 'JyGDreams', 'img', 'icon-clinica.png')
+    if not os.path.exists(logo_path):
+        logo_path = os.path.join(settings.BASE_DIR, 'JyGDreams', 'static', 'JyGDreams', 'img', 'icon-clinica.png')
+    if os.path.exists(logo_path):
+        logo = Image(logo_path, width=0.9*inch, height=0.9*inch)
+        logo.hAlign = 'LEFT'
+        header_table_data.append([logo, Paragraph("<b>Clínica Estética JyGDreams</b>", title_style)])
+        header_table = Table(header_table_data, colWidths=[1*inch, 5.5*inch])
+        header_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#198754')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 10),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        elements.append(header_table)
+    else:
+        elements.append(Paragraph("Clínica Estética JyGDreams", title_style))
+    elements.append(Spacer(1, 18))
+
+    # Info paciente
+    elements.append(Paragraph("<b>Datos del Paciente</b>", section_title))
+    paciente_data = [
+        ["Nombre", f"{paciente.nombre} {paciente.apellido}"],
+        ["Ocupación", paciente.ocupacion],
+        ["Teléfono", paciente.telefono],
+        ["Correo", paciente.correo],
+    ]
+    paciente_table = Table(paciente_data, colWidths=[1.7*inch, 4.3*inch])
+    paciente_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#e9f7ef')),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#198754')),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10.5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('GRID', (0, 0), (-1, -1), 0.3, colors.HexColor('#b2dfdb')),
+    ]))
+    elements.append(paciente_table)
+    elements.append(Spacer(1, 10))
+
+    # Expediente info
+    elements.append(Paragraph("<b>Expediente Clínico</b>", section_title))
+    expediente_data = [
+        ["Fecha de Registro", expediente.fecha_registro.strftime('%d/%m/%Y')],
+        ["Uso de Marcapasos", "Sí" if expediente.usa_marcapasos == 'si' else "No"]
+    ]
+    expediente_table = Table(expediente_data, colWidths=[1.7*inch, 4.3*inch])
+    expediente_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f9fbe7')),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#b7950b')),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10.5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('GRID', (0, 0), (-1, -1), 0.3, colors.HexColor('#f7ca18')),
+    ]))
+    elements.append(expediente_table)
+    elements.append(Spacer(1, 10))
+
+    # Hábitos
+    elements.append(Paragraph("<b>Hábitos</b>", section_title))
+    if habito:
+        habitos_data = [
+            ["Vasos de agua", habito.vasos_agua],
+            ["Trasnoche", habito.trasnoche],
+            ["Consumo Tabaco", habito.tabaco],
+            ["Consumo Café", habito.cafe],
+            ["Consumo Licor", habito.licor],
+            ["Medicamentos", habito.medicamentos],
+            ["Suplementos", habito.suplementos],
+        ]
+        habitos_table = Table(habitos_data, colWidths=[1.7*inch, 4.3*inch])
+        habitos_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#e3f2fd')),
+            ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#1565c0')),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('GRID', (0, 0), (-1, -1), 0.3, colors.HexColor('#90caf9')),
+        ]))
+        elements.append(habitos_table)
+    else:
+        elements.append(Paragraph("No hay información de hábitos registrada.", normal_style))
+    elements.append(Spacer(1, 10))
+
+    # Biotipo
+    elements.append(Paragraph("<b>Biotipo Cutáneo</b>", section_title))
+    if biotipo:
+        elements.append(Paragraph(biotipo.biotipo.nombre, normal_style))
+    else:
+        elements.append(Paragraph("No registrado.", normal_style))
+    elements.append(Spacer(1, 10))
+
+    # Cuidados de piel
+    elements.append(Paragraph("<b>Cuidados de Piel</b>", section_title))
+    if cuidados_nombres:
+        lista = ', '.join([n for n in cuidados_nombres if n != 'Otros'])
+        if otro_valor:
+            lista += f", Otros: {otro_valor}"
+        elements.append(Paragraph(lista, normal_style))
+    else:
+        elements.append(Paragraph("No registrado.", normal_style))
+    elements.append(Spacer(1, 10))
+
+    # Historial clínico
+    elements.append(Paragraph("<b>Historial Clínico</b>", section_title))
+    elements.append(Paragraph(expediente.historial_clinico or "No registrado.", normal_style))
+    elements.append(Spacer(1, 16))
+
+    # Fecha de generación
+    elements.append(Paragraph(f"<b>Fecha de generación:</b> {datetime.now().strftime('%d/%m/%Y %H:%M')}", normal_style))
+
+    doc.build(elements)
+    pdf = buffer.getvalue()
+    buffer.close()
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="expediente_{paciente.apellido}_{paciente.nombre}.pdf"'
+    response.write(pdf)
+    return response
