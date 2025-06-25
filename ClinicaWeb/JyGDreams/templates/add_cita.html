@@ -126,17 +126,29 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   }
+  // Validación para no permitir fechas pasadas
+  var inputFecha = document.querySelector('input[name="fecha"]');
+  if (inputFecha) {
+    var hoy = new Date();
+    var yyyy = hoy.getFullYear();
+    var mm = String(hoy.getMonth() + 1).padStart(2, '0');
+    var dd = String(hoy.getDate()).padStart(2, '0');
+    var minDate = yyyy + '-' + mm + '-' + dd;
+    inputFecha.setAttribute('min', minDate);
+  }
 });
 </script>
 
 {% if messages %}
-<script>
-  Swal.fire({
-    icon: 'success',
-    title: '{% for message in messages %}{{ message }}{% endfor %}',
-    showConfirmButton: true,
-  });
-</script>
+  {% for message in messages %}
+    <script>
+      Swal.fire({
+        icon: '{{ message.tags }}',
+        title: '{{ message|escapejs }}',
+        showConfirmButton: true,
+      });
+    </script>
+  {% endfor %}
 {% endif %}
 
 {% endblock %}

@@ -19,6 +19,7 @@ from datetime import datetime
 import os
 from django.conf import settings
 import json
+from django.core.exceptions import ValidationError
 
 #def login(request):
     #return render(request, 'login.html')
@@ -420,17 +421,29 @@ def editar_cita(request, cita_id):
         cita.hora = hora_nueva
         cita.motivo_cita = motivo
         cita.estado = estado
-        cita.save()
-
-        # Actualizar procedimientos asociados
-        cita.procedimientos.clear()
-        if procedimiento1_id:
-            cita.procedimientos.add(procedimiento1_id)
-        if procedimiento2_id:
-            cita.procedimientos.add(procedimiento2_id)
-
-        messages.success(request, 'Cita editada correctamente.')
-        return redirect('home_citas', paciente_id=cita.paciente.id)
+        try:
+            cita.full_clean()
+            cita.save()
+            # Actualizar procedimientos asociados
+            cita.procedimientos.clear()
+            if procedimiento1_id:
+                cita.procedimientos.add(procedimiento1_id)
+            if procedimiento2_id:
+                cita.procedimientos.add(procedimiento2_id)
+            messages.success(request, 'Cita editada correctamente.')
+            return redirect('home_citas', paciente_id=cita.paciente.id)
+        except ValidationError as e:
+            # Para prellenar el formulario
+            proc1 = procedimientos_actuales[0] if len(procedimientos_actuales) > 0 else None
+            proc2 = procedimientos_actuales[1] if len(procedimientos_actuales) > 1 else None
+            messages.error(request, e.message_dict.get('__all__', e.messages)[0])
+            return render(request, 'edit_cita.html', {
+                'cita': cita,
+                'procedimientos': procedimientos,
+                'procedimientos_dict': procedimientos_dict,
+                'proc1': proc1,
+                'proc2': proc2,
+            })
 
     # Para prellenar el formulario
     proc1 = procedimientos_actuales[0] if len(procedimientos_actuales) > 0 else None
@@ -462,20 +475,29 @@ def agregar_cita(request, paciente_id):
         procedimiento1_id = request.POST.get('procedimiento1')
         procedimiento2_id = request.POST.get('procedimiento2')
 
-        cita = Cita.objects.create(
+        cita = Cita(
             paciente=paciente,
             fecha=fecha,
             hora=hora,
             motivo_cita=motivo,
             estado=estado
         )
-        if procedimiento1_id:
-            CitaProcedimiento.objects.create(cita=cita, procedimiento_id=procedimiento1_id)
-        if procedimiento2_id:
-            CitaProcedimiento.objects.create(cita=cita, procedimiento_id=procedimiento2_id)
-
-        messages.success(request, 'Cita agregada correctamente.')
-        return redirect('home_citas', paciente_id=paciente.id)
+        try:
+            cita.full_clean()
+            cita.save()
+            if procedimiento1_id:
+                CitaProcedimiento.objects.create(cita=cita, procedimiento_id=procedimiento1_id)
+            if procedimiento2_id:
+                CitaProcedimiento.objects.create(cita=cita, procedimiento_id=procedimiento2_id)
+            messages.success(request, 'Cita agregada correctamente.')
+            return redirect('home_citas', paciente_id=paciente.id)
+        except ValidationError as e:
+            messages.error(request, e.message_dict.get('__all__', e.messages)[0])
+            return render(request, 'add_cita.html', {
+                'paciente': paciente,
+                'procedimientos': procedimientos,
+                'procedimientos_dict': procedimientos_dict
+            })
 
     return render(request, 'add_cita.html', {
         'paciente': paciente,
