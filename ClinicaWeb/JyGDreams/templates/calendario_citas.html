@@ -6,6 +6,117 @@
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 <link rel="stylesheet" href="{% static 'JyGDreams/cards_patient.css' %}">
 <style>
+  /* Responsive container */
+  .calendar-container {
+    background: rgba(255,255,255,0.18);
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 32px rgba(44,62,80,0.12);
+    padding: 1.5rem;
+    margin: 0 auto;
+    max-width: 100%;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  /* Make FullCalendar always use 100% width */
+  #calendario-citas .fc {
+    width: 100% !important;
+    min-width: 320px;
+  }
+
+  /* Scroll for week/day views on mobile */
+  @media (max-width: 768px) {
+    .calendar-container {
+      padding: 0.5rem;
+      border-radius: 1rem;
+      margin: 0 0.2rem;
+      min-width: 0;
+    }
+    #calendario-citas .fc-timeGridWeek-view,
+    #calendario-citas .fc-timeGridDay-view {
+      overflow-x: auto;
+    }
+    #calendario-citas .fc-scroller-harness,
+    #calendario-citas .fc-scroller {
+      overflow-x: auto !important;
+    }
+    #calendario-citas .fc-timegrid,
+    #calendario-citas .fc-timegrid-body {
+      min-width: 500px;
+    }
+    .fc .fc-toolbar {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .fc .fc-toolbar-title {
+      font-size: 1.1rem;
+      text-align: center;
+    }
+    .fc .fc-button {
+      font-size: 0.85rem;
+      padding: 0.3em 0.7em;
+      margin: 0 1px;
+    }
+    .fc .fc-col-header-cell {
+      font-size: 0.8rem;
+      padding: 0.4rem 0.1rem;
+    }
+    .fc .fc-daygrid-day-number {
+      font-size: 0.85rem;
+    }
+    .fc .fc-event {
+      font-size: 0.75rem;
+      padding: 0.15rem 0.3rem;
+    }
+    .fc .fc-daygrid-day-frame {
+      min-height: 50px;
+      padding: 0.1rem;
+    }
+    .fc .fc-daygrid-day {
+      min-height: 60px;
+    }
+    .fc .fc-timegrid-slot-label {
+      font-size: 0.8rem;
+    }
+    .fc .fc-timegrid-axis {
+      font-size: 0.8rem;
+    }
+    .fc .fc-timegrid-event {
+      font-size: 0.8rem;
+    }
+  }
+
+  /* Tablet styles */
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .calendar-container {
+      padding: 1rem;
+    }
+    .fc .fc-toolbar-title {
+      font-size: 1.2rem;
+    }
+    .fc .fc-button {
+      font-size: 0.95rem;
+      padding: 0.45em 1em;
+    }
+    .fc .fc-col-header-cell {
+      font-size: 0.9rem;
+    }
+    .fc .fc-daygrid-day-number {
+      font-size: 0.95rem;
+    }
+    .fc .fc-event {
+      font-size: 0.85rem;
+    }
+  }
+
+  /* Desktop styles */
+  @media (min-width: 1025px) {
+    .calendar-container {
+      padding: 1.5rem;
+    }
+  }
+
+  /* General FullCalendar styles */
   .fc .fc-button {
     background: var(--emerald-green, #2ecc71);
     color: #fff;
@@ -18,22 +129,26 @@
     padding: 0.5em 1.2em;
     font-size: 1rem;
   }
+  
   .fc .fc-button:hover, .fc .fc-button:focus {
     background: var(--emerald-dark, #27ae60);
     color: #fff;
     box-shadow: 0 4px 16px rgba(46,204,113,0.12);
   }
+  
   .fc .fc-button.fc-button-active {
     background: var(--emerald-dark, #27ae60);
     color: #fff;
     box-shadow: 0 4px 16px rgba(46,204,113,0.15);
   }
+  
   .fc .fc-toolbar-title {
     color: #2c3e50;
     font-weight: 700;
     letter-spacing: 1px;
     font-size: 1.5rem;
   }
+  
   .fc .fc-col-header-cell {
     background: var(--emerald-light, #a3e4d7);
     color: #2c3e50;
@@ -41,21 +156,90 @@
     font-size: 1rem;
     border-radius: 0.5rem 0.5rem 0 0;
   }
+  
   .fc .fc-daygrid-day {
     background: rgba(255,255,255,0.12);
   }
+  
   .fc .fc-day-today {
     background: #e8f8f5 !important;
     border-radius: 0.7rem;
     box-shadow: 0 2px 8px rgba(46,204,113,0.10);
   }
+
+  /* Responsive modal */
+  .event-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(44,62,80,0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 1rem;
+  }
+
+  .event-modal-content {
+    background: #fff;
+    border-radius: 1.2rem;
+    box-shadow: 0 8px 32px rgba(44,62,80,0.18);
+    padding: 2.5rem 2rem;
+    min-width: 220px;
+    max-width: 95vw;
+    text-align: center;
+  }
+
+  @media (max-width: 768px) {
+    .event-modal-content {
+      padding: 1.2rem 0.5rem;
+      min-width: 180px;
+      max-width: 99vw;
+    }
+  }
+
+  /* Responsive title */
+  .calendar-title {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  @media (max-width: 768px) {
+    .calendar-title {
+      font-size: 1.2rem;
+      margin-bottom: 1.2rem;
+    }
+  }
+
+  /* Responsive back button */
+  .back-button-container {
+    text-align: center;
+    margin-top: 2rem;
+  }
+
+  @media (max-width: 768px) {
+    .back-button-container {
+      margin-top: 1.2rem;
+    }
+    
+    .back-button-container .btn {
+      font-size: 0.9rem;
+      padding: 0.5rem 1rem;
+    }
+  }
 </style>
 
 <div class="container py-5">
-  <h2 class="text-center mb-4 title"><i class="bi bi-calendar-event me-2"></i>Calendario de Citas</h2>
-  <div id="calendario-citas" style="background:rgba(255,255,255,0.18);border-radius:1.5rem;box-shadow:0 8px 32px rgba(44,62,80,0.12);padding:1.5rem;"></div>
-  <div class="text-center mt-4">
-    <a href="{% url 'cita_pacientes' %}" class="btn btn-outline-emerald"><i class="bi bi-arrow-left"></i> Volver a pacientes</a>
+  <h2 class="text-center mb-4 title calendar-title">
+    <i class="bi bi-calendar-event me-2"></i>Calendario de Citas
+  </h2>
+  <div id="calendario-citas" class="calendar-container"></div>
+  <div class="back-button-container">
+    <a href="{% url 'cita_pacientes' %}" class="btn btn-outline-emerald">
+      <i class="bi bi-arrow-left"></i> Volver a pacientes
+    </a>
   </div>
 </div>
 
@@ -78,10 +262,26 @@ document.addEventListener('DOMContentLoaded', function() {
       ev.extendedProps = { bgIdx: idx % bgColors.length };
       return ev;
     });
+
+    // Responsive height based on screen size and view
+    function getCalendarHeight() {
+      if (window.innerWidth <= 768) {
+        return 420;
+      } else if (window.innerWidth <= 1024) {
+        return 520;
+      } else {
+        return 600;
+      }
+    }
+
     var calendar = new FullCalendar.Calendar(calendarEl, {
       initialView: 'dayGridMonth',
       locale: 'es',
-      height: 600,
+      height: getCalendarHeight(),
+      contentHeight: 'auto',
+      aspectRatio: 1.5,
+      expandRows: true,
+      handleWindowResize: true,
       headerToolbar: {
         left: 'prev,next today',
         center: 'title',
@@ -123,18 +323,9 @@ document.addEventListener('DOMContentLoaded', function() {
       },
       eventClick: function(info) {
         var modal = document.createElement('div');
-        modal.style.position = 'fixed';
-        modal.style.top = '0';
-        modal.style.left = '0';
-        modal.style.width = '100vw';
-        modal.style.height = '100vh';
-        modal.style.background = 'rgba(44,62,80,0.18)';
-        modal.style.display = 'flex';
-        modal.style.alignItems = 'center';
-        modal.style.justifyContent = 'center';
-        modal.style.zIndex = '9999';
+        modal.className = 'event-modal';
         modal.innerHTML = `
-          <div style="background: #fff; border-radius: 1.2rem; box-shadow: 0 8px 32px rgba(44,62,80,0.18); padding: 2.5rem 2rem; min-width: 320px; max-width: 90vw; text-align: center;">
+          <div class="event-modal-content">
             <h4 style="color: #2ecc71; font-weight: 700; margin-bottom: 1rem;">Cita</h4>
             <div style="font-size: 1.1rem; color: #2c3e50; margin-bottom: 1rem;">${info.event.title}</div>
             <div style="font-size: 1rem; color: #27ae60; margin-bottom: 1.5rem;">${info.event.start.toLocaleString()}</div>
@@ -148,10 +339,17 @@ document.addEventListener('DOMContentLoaded', function() {
       },
       dayMaxEventRows: true,
       views: {
-        dayGridMonth: { dayMaxEventRows: 3 }
+        dayGridMonth: { dayMaxEventRows: 3 },
+        timeGridWeek: { dayMaxEventRows: 3 },
+        timeGridDay: { dayMaxEventRows: 3 }
       }
     });
     calendar.render();
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+      calendar.setOption('height', getCalendarHeight());
+    });
   }
 });
 </script>
