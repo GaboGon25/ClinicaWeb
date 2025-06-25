@@ -66,6 +66,32 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.querySelector('form');
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      Swal.fire({
+        title: 'Editar Paciente',
+        text: '¿Deseas guardar los cambios?',
+        icon: 'question',
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#d33',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, guardar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          form.submit();
+        }
+      });
+    });
+  }
+});
+</script>
+
 {% if messages %}
 <script>
   Swal.fire({

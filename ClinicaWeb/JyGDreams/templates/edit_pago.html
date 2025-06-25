@@ -44,7 +44,7 @@
 
       <div class="d-grid">
         <button class="btn btn-warning" type="submit">
-          <i class="bi bi-arrow-repeat"></i> Guardar Cambios
+          <i class="bi bi-plus-circle"></i> Guardar Cambios
         </button>
       </div>
     </form>
@@ -66,6 +66,30 @@
     inputs.forEach(input => {
       input.addEventListener('input', actualizarTotal);
     });
+
+    const form = document.querySelector('form');
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      Swal.fire({
+        title: 'Editar Pago',
+        text: '¿Deseas guardar los cambios?',
+        icon: 'question',
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#d33',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, guardar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          form.submit();
+        }
+      });
+    });
+  }
+
+
+
   });
 </script>
 

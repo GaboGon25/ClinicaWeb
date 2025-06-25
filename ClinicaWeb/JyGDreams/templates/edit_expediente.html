@@ -180,7 +180,7 @@
 
     <!-- BOTÓN -->
     <div class="d-grid">
-      <button type="submit" class="btn btn-success btn-lg rounded-pill">
+      <button type="submit" class="btn btn-warning btn-lg rounded-pill">
         <i class="bi bi-plus-circle"></i>
         {% if expediente %}Guardar Cambios{% else %}Agregar{% endif %}
       </button>
@@ -200,6 +200,8 @@ document.addEventListener('DOMContentLoaded', function() {
         title: 'Editar Expediente',
         text: '¿Deseas guardar los cambios?',
         icon: 'question',
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#d33',
         showCancelButton: true,
         confirmButtonText: 'Sí, guardar',
         cancelButtonText: 'Cancelar'
