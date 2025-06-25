@@ -31,4 +31,5 @@ urlpatterns = [
     path('estadisticas/', views.estadisticas, name='estadisticas'),
     path('paciente/<int:paciente_id>/pdf-citas/', views.generar_pdf_citas, name='generar_pdf_citas'),
     path('expediente/<int:expediente_id>/pdf/', views.generar_pdf_expediente, name='generar_pdf_expediente'),
+    path('calendario/', views.calendario_citas, name='calendario_citas'),
 ]

@@ -18,6 +18,7 @@ from io import BytesIO
 from datetime import datetime
 import os
 from django.conf import settings
+import json
 
 #def login(request):
     #return render(request, 'login.html')
@@ -344,9 +345,7 @@ def cita_pacientes(request):
     if orden == 'alfabetico':
         pacientes = pacientes.order_by('nombre', 'apellido')
     elif orden == 'fecha':
-        # Obtener la fecha actual
         fecha_actual = timezone.localdate()
-        # Filtrar solo pacientes que tengan citas futuras con estados válidos
         pacientes = pacientes.filter(
             Exists(
                 Cita.objects.filter(
@@ -370,15 +369,27 @@ def cita_pacientes(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    # --- Eventos para el calendario ---
+    citas = Cita.objects.select_related('paciente').filter(estado__in=['AGENDADO', 'REPROGRAMADO'])
+    eventos = []
+    for cita in citas:
+        procedimientos = ", ".join([p.titulo for p in cita.procedimientos.all()])
+        eventos.append({
+            "title": f"{cita.paciente.nombre} {cita.paciente.apellido} - {procedimientos}",
+            "start": f"{cita.fecha}T{cita.hora}",
+            "allDay": False,
+        })
+
+    eventos_json = json.dumps(eventos, ensure_ascii=False)
+
     return render(request, 'cards_patient.html', {
         'pacientes': page_obj.object_list,
         'page_obj': page_obj,
         'query': query,
         'fecha': fecha,
         'orden': orden,
+        'eventos_json': eventos_json,
     })
-    #pacientes = Paciente.objects.all()
-    #return render(request, 'cards_patient.html', {'pacientes': pacientes})
 
 #def cuadros_citas(request):
     #return render(request, 'home_citas.html')
@@ -1123,3 +1134,16 @@ def generar_pdf_expediente(request, expediente_id):
     response['Content-Disposition'] = f'attachment; filename="expediente_{paciente.apellido}_{paciente.nombre}.pdf"'
     response.write(pdf)
     return response
+
+def calendario_citas(request):
+    citas = Cita.objects.select_related('paciente').filter(estado__in=['AGENDADO', 'REPROGRAMADO'])
+    eventos = []
+    for cita in citas:
+        procedimientos = ", ".join([p.titulo for p in cita.procedimientos.all()])
+        eventos.append({
+            "title": f"{cita.paciente.nombre} {cita.paciente.apellido} - {procedimientos}",
+            "start": f"{cita.fecha}T{cita.hora}",
+            "allDay": False,
+        })
+    eventos_json = json.dumps(eventos, ensure_ascii=False)
+    return render(request, 'calendario_citas.html', {'eventos_json': eventos_json})

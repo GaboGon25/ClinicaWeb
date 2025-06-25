@@ -7,6 +7,12 @@
 <div class="container py-5">
   <h2 class="text-center mb-5 title"><i class="bi bi-person-fill me-2"></i>Pacientes Registrados</h2>
 
+  <div class="text-end mb-3">
+    <a href="{% url 'calendario_citas' %}" class="btn btn-outline-emerald">
+      <i class="bi bi-calendar-event"></i> Ver calendario de citas
+    </a>
+  </div>
+
   <!-- Barra de búsqueda y filtros -->
   <form method="get" class="mb-4 p-4 rounded shadow-sm search-bar-custom" autocomplete="off" style="max-width:900px; margin:auto;">
     <div class="row g-3 align-items-end">
@@ -40,7 +46,7 @@
   <div id="cards-pacientes-block">
     {% include 'partials/cards_pacientes_block.html' %}
   </div>
-</div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -84,6 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
       cardsBlock.scrollIntoView({behavior: "smooth"});
     }
   });
+
 });
 </script>
 {% endblock %}
