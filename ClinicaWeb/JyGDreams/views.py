@@ -117,8 +117,18 @@ def expediente_pacientes(request):
         pacientes = pacientes.filter(expediente__isnull=True)
     
     # Paginación
-    paginator = Paginator(pacientes, 9)  # 9 pacientes por página
+    paginator = Paginator(pacientes, 6)  # 6 pacientes por página
     page_number = request.GET.get('page')
+    
+    # Convertir page_number a entero si existe
+    if page_number:
+        try:
+            page_number = int(page_number)
+        except (ValueError, TypeError):
+            page_number = 1
+    else:
+        page_number = 1
+    
     page_obj = paginator.get_page(page_number)
     
     return render(request, 'cards_expediente.html', {
@@ -334,14 +344,29 @@ def cita_pacientes(request):
     if orden == 'alfabetico':
         pacientes = pacientes.order_by('nombre', 'apellido')
     elif orden == 'fecha':
-        pacientes = pacientes.annotate(
+        # Obtener la fecha actual
+        fecha_actual = timezone.localdate()
+        # Filtrar solo pacientes que tengan citas futuras con estados válidos
+        pacientes = pacientes.filter(
+            Exists(
+                Cita.objects.filter(
+                    paciente=OuterRef('pk'),
+                    estado__in=['AGENDADO', 'REPROGRAMADO'],
+                    fecha__gte=fecha_actual
+                )
+            )
+        ).annotate(
             proxima_cita=Subquery(
-                Cita.objects.filter(paciente=OuterRef('pk')).order_by('fecha').values('fecha')[:1]
+                Cita.objects.filter(
+                    paciente=OuterRef('pk'),
+                    estado__in=['AGENDADO', 'REPROGRAMADO'],
+                    fecha__gte=fecha_actual
+                ).order_by('fecha').values('fecha')[:1]
             )
         ).order_by('proxima_cita')
 
     # --- Paginación ---
-    paginator = Paginator(pacientes, 9)  # 9 cards por página
+    paginator = Paginator(pacientes, 6)  # 6 cards por página
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -590,14 +615,29 @@ def ajax_filtrar_pacientes(request):
     if orden == 'alfabetico':
         pacientes = pacientes.order_by('nombre', 'apellido')
     elif orden == 'fecha':
-        pacientes = pacientes.annotate(
+        # Obtener la fecha actual
+        fecha_actual = timezone.localdate()
+        # Filtrar solo pacientes que tengan citas futuras con estados válidos
+        pacientes = pacientes.filter(
+            Exists(
+                Cita.objects.filter(
+                    paciente=OuterRef('pk'),
+                    estado__in=['AGENDADO', 'REPROGRAMADO'],
+                    fecha__gte=fecha_actual
+                )
+            )
+        ).annotate(
             proxima_cita=Subquery(
-                Cita.objects.filter(paciente=OuterRef('pk')).order_by('fecha').values('fecha')[:1]
+                Cita.objects.filter(
+                    paciente=OuterRef('pk'),
+                    estado__in=['AGENDADO', 'REPROGRAMADO'],
+                    fecha__gte=fecha_actual
+                ).order_by('fecha').values('fecha')[:1]
             )
         ).order_by('proxima_cita')
 
     # Paginación
-    paginator = Paginator(pacientes, 9)
+    paginator = Paginator(pacientes, 6)
     page_obj = paginator.get_page(page_number)
 
     # Renderiza el bloque parcial con paginación y filtros
@@ -872,6 +912,12 @@ def ajax_filtrar_expedientes(request):
     tiene_expediente = request.GET.get('tiene_expediente', '')
     page_number = request.GET.get('page', 1)
     
+    # Convertir page_number a entero
+    try:
+        page_number = int(page_number)
+    except (ValueError, TypeError):
+        page_number = 1
+    
     pacientes = Paciente.objects.all()
     
     # Filtro por nombre/apellido
@@ -887,7 +933,7 @@ def ajax_filtrar_expedientes(request):
         pacientes = pacientes.filter(expediente__isnull=True)
     
     # Paginación
-    paginator = Paginator(pacientes, 9)  # 9 pacientes por página
+    paginator = Paginator(pacientes, 6)  # 6 pacientes por página
     page_obj = paginator.get_page(page_number)
     
     # Renderiza el bloque parcial con paginación y filtros

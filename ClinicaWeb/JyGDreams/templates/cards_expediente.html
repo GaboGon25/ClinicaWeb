@@ -75,14 +75,8 @@ document.addEventListener('DOMContentLoaded', function() {
       e.preventDefault();
       const url = new URL(e.target.href, window.location.origin);
       const page = url.searchParams.get('page');
-      const query = url.searchParams.get('q');
-      const tiene_expediente = url.searchParams.get('tiene_expediente');
       
-      filtrarAjax({
-        page: page,
-        q: query,
-        tiene_expediente: tiene_expediente
-      });
+      filtrarAjax({page: page});
       
       // Scroll al inicio de las cards (opcional)
       expedientesBlock.scrollIntoView({behavior: "smooth"});
