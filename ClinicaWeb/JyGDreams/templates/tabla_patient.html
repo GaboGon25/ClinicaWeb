@@ -10,7 +10,7 @@
 <div class="container py-5">
   <h2 class="text-center mb-5 title"><i class="bi bi-person-fill me-2"></i>Lista de Pacientes</h2>
 
-  <!-- Barra de búsqueda ddd -->
+  <!-- Barra de búsqueda -->
   <form method="get" class="mb-4 p-4 rounded shadow-sm search-bar-custom" autocomplete="off" style="max-width:900px; margin:auto;">
     <div class="row g-3 align-items-end">
       <div class="col-md-8">
@@ -48,12 +48,8 @@
         <tr>
           <th class="text-center py-3 rounded-start-4"><i class="bi bi-person fs-5 me-2"></i>Nombre</th>
           <th class="text-center py-3"><i class="bi bi-person fs-5 me-2"></i>Apellido</th>
-          <th class="text-center py-3"><i class="bi bi-calendar fs-5 me-2"></i>Fecha Nac.</th>
-          <th class="text-center py-3"><i class="bi bi-briefcase fs-5 me-2"></i>Ocupación</th>
-          <th class="text-center py-3"><i class="bi bi-envelope fs-5 me-2"></i>Correo</th>
-          <th class="text-center py-3"><i class="bi bi-telephone fs-5 me-2"></i>Teléfono</th>
-          <th class="text-center py-3"><i class="bi bi-geo-alt fs-5 me-2"></i>Dirección</th>
-          <th class="text-center py-3 rounded-end-4"><i class="bi bi-pencil fs-5 me-2"></i>Acciones</th>
+          <th class="text-center py-3 rounded-end-4"><i class="bi bi-briefcase fs-5 me-2"></i>Ocupación</th>
+          <th class="text-center py-3 rounded-end-4"><i class="bi bi-three-dots-vertical fs-5"></i>Acciones</th>
         </tr>
       </thead>
       <tbody>
@@ -61,26 +57,105 @@
         <tr class="bg-white bg-opacity-75 border-bottom">
           <td class="text-center fw-semibold">{{ paciente.nombre }}</td>
           <td class="text-center">{{ paciente.apellido }}</td>
-          <td class="text-center">{{ paciente.fecha_nacimiento|date:"d/m/Y" }}</td>
           <td class="text-center">{{ paciente.ocupacion }}</td>
-          <td class="text-center">{{ paciente.correo }}</td>
-          <td class="text-center">{{ paciente.telefono }}</td>
-          <td class="text-center">{{ paciente.direccion }}</td>
           <td class="text-center">
-            <a href="{% url 'editar_paciente' paciente.id %}" class="btn btn-outline-success btn-sm rounded-pill px-3 d-inline-flex align-items-center gap-1 shadow-sm">
-              <i class="bi bi-pencil-square fs-5"></i> Editar
-            </a>
+            <div class="dropdown">
+              <button class="btn btn-link text-dark p-0" type="button" id="dropdownMenuButton{{ paciente.id }}" data-bs-toggle="dropdown" aria-expanded="false" style="text-decoration: none;">
+                <i class="bi bi-three-dots-vertical fs-4"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton{{ paciente.id }}">
+                <li>
+                  <a class="dropdown-item ver-info-paciente" href="#" 
+                     data-paciente-id="{{ paciente.id }}"
+                     data-nombre="{{ paciente.nombre }}"
+                     data-apellido="{{ paciente.apellido }}"
+                     data-fecha-nacimiento="{{ paciente.fecha_nacimiento|date:'d/m/Y' }}"
+                     data-ocupacion="{{ paciente.ocupacion }}"
+                     data-correo="{{ paciente.correo }}"
+                     data-telefono="{{ paciente.telefono }}"
+                     data-direccion="{{ paciente.direccion }}">
+                    <i class="bi bi-eye me-2"></i>Ver información del paciente
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{% url 'editar_paciente' paciente.id %}">
+                    <i class="bi bi-pencil-square me-2"></i>Editar Paciente
+                  </a>
+                </li>
+              </ul>
+            </div>
           </td>
         </tr>
         {% empty %}
         <tr>
-          <td colspan="8" class="text-center texto-vacio">
+          <td colspan="4" class="text-center texto-vacio">
             <i class="bi bi-inbox me-2"></i>No hay pacientes registrados.
           </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
+  </div>
+
+  <!-- Modal para mostrar información del paciente -->
+  <div class="modal fade" id="modalInfoPaciente" tabindex="-1" aria-labelledby="modalInfoPacienteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header" style="background: linear-gradient(90deg, #a3e4d7 0%, #2ecc71 100%);">
+          <h5 class="modal-title" id="modalInfoPacienteLabel">
+            <i class="bi bi-person-circle me-2"></i>Información del Paciente
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row mb-3">
+            <div class="col-4 fw-semibold text-muted">
+              <i class="bi bi-person me-2"></i>Nombre:
+            </div>
+            <div class="col-8" id="modal-nombre"></div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-4 fw-semibold text-muted">
+              <i class="bi bi-person me-2"></i>Apellido:
+            </div>
+            <div class="col-8" id="modal-apellido"></div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-4 fw-semibold text-muted">
+              <i class="bi bi-calendar me-2"></i>Fecha de Nacimiento:
+            </div>
+            <div class="col-8" id="modal-fecha-nacimiento"></div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-4 fw-semibold text-muted">
+              <i class="bi bi-briefcase me-2"></i>Ocupación:
+            </div>
+            <div class="col-8" id="modal-ocupacion"></div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-4 fw-semibold text-muted">
+              <i class="bi bi-envelope me-2"></i>Correo:
+            </div>
+            <div class="col-8" id="modal-correo"></div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-4 fw-semibold text-muted">
+              <i class="bi bi-telephone me-2"></i>Teléfono:
+            </div>
+            <div class="col-8" id="modal-telefono"></div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-4 fw-semibold text-muted">
+              <i class="bi bi-geo-alt me-2"></i>Dirección:
+            </div>
+            <div class="col-8" id="modal-direccion"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -96,31 +171,65 @@
 {% endif %}
 
 <script>
+// Función para mostrar la información del paciente en el modal
+function mostrarInfoPaciente(id, nombre, apellido, fechaNacimiento, ocupacion, correo, telefono, direccion) {
+  document.getElementById('modal-nombre').textContent = nombre;
+  document.getElementById('modal-apellido').textContent = apellido;
+  document.getElementById('modal-fecha-nacimiento').textContent = fechaNacimiento;
+  document.getElementById('modal-ocupacion').textContent = ocupacion;
+  document.getElementById('modal-correo').textContent = correo;
+  document.getElementById('modal-telefono').textContent = telefono;
+  document.getElementById('modal-direccion').textContent = direccion;
+  
+  const modal = new bootstrap.Modal(document.getElementById('modalInfoPaciente'));
+  modal.show();
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+  // Búsqueda de pacientes
   const input = document.getElementById('busquedaPaciente');
   const sugerenciasDiv = document.getElementById('sugerenciasPacientes');
-  input.addEventListener('input', function() {
-    const valor = this.value;
-    if (valor.length > 0) {
-      fetch(`{% url 'ajax_sugerencias_pacientes' %}?q=${valor}`)
-        .then(response => response.json())
-        .then(data => {
-          sugerenciasDiv.innerHTML = '';
-          data.forEach(nombre => {
-            const item = document.createElement('button');
-            item.type = 'button';
-            item.className = 'list-group-item list-group-item-action';
-            item.textContent = nombre;
-            item.onclick = () => {
-              input.value = nombre;
-              sugerenciasDiv.innerHTML = '';
-            };
-            sugerenciasDiv.appendChild(item);
+  if (input && sugerenciasDiv) {
+    input.addEventListener('input', function() {
+      const valor = this.value;
+      if (valor.length > 0) {
+        fetch(`{% url 'ajax_sugerencias_pacientes' %}?q=${valor}`)
+          .then(response => response.json())
+          .then(data => {
+            sugerenciasDiv.innerHTML = '';
+            data.forEach(nombre => {
+              const item = document.createElement('button');
+              item.type = 'button';
+              item.className = 'list-group-item list-group-item-action';
+              item.textContent = nombre;
+              item.onclick = () => {
+                input.value = nombre;
+                sugerenciasDiv.innerHTML = '';
+              };
+              sugerenciasDiv.appendChild(item);
+            });
           });
-        });
-    } else {
-      sugerenciasDiv.innerHTML = '';
-    }
+      } else {
+        sugerenciasDiv.innerHTML = '';
+      }
+    });
+  }
+
+  // Event listeners para los botones de ver información
+  const botonesVerInfo = document.querySelectorAll('.ver-info-paciente');
+  botonesVerInfo.forEach(boton => {
+    boton.addEventListener('click', function(e) {
+      e.preventDefault();
+      const nombre = this.getAttribute('data-nombre');
+      const apellido = this.getAttribute('data-apellido');
+      const fechaNacimiento = this.getAttribute('data-fecha-nacimiento');
+      const ocupacion = this.getAttribute('data-ocupacion');
+      const correo = this.getAttribute('data-correo');
+      const telefono = this.getAttribute('data-telefono');
+      const direccion = this.getAttribute('data-direccion');
+      
+      mostrarInfoPaciente(null, nombre, apellido, fechaNacimiento, ocupacion, correo, telefono, direccion);
+    });
   });
 });
 </script>
