@@ -16,6 +16,7 @@ from reportlab.lib.units import inch
 from reportlab.lib import colors
 from io import BytesIO
 from datetime import datetime
+from decimal import Decimal
 import os
 from django.conf import settings
 import json
@@ -559,10 +560,35 @@ def agregar_pago(request, cita_id):
     monto_final = sum([p.costo for p in procedimientos])
 
     if request.method == 'POST':
+        # Obtener el descuento del formulario
+        descuento = request.POST.get('descuento', '0')
+        try:
+            descuento = Decimal(descuento) if descuento else Decimal('0')
+        except (ValueError, TypeError):
+            descuento = Decimal('0')
+        
+        # Validar el descuento
+        subtotal = sum([p.costo for p in procedimientos])
+        if descuento < 0:
+            messages.error(request, "El descuento no puede ser negativo.")
+            return render(request, 'add_pago.html', {
+                'cita': cita,
+                'procedimientos': procedimientos,
+                'monto_final': monto_final
+            })
+        if descuento > subtotal:
+            messages.error(request, f"El descuento no puede exceder el subtotal de C${subtotal:.2f}.")
+            return render(request, 'add_pago.html', {
+                'cita': cita,
+                'procedimientos': procedimientos,
+                'monto_final': monto_final
+            })
+        
         pago = Pago.objects.create(
             cita=cita,
             fecha=timezone.localdate(),
-            total=0
+            total=0,
+            descuento=descuento
         )
         cita.estado = 'REALIZADO'
         cita.save()
@@ -579,6 +605,7 @@ def editar_pago(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id)
     procedimientos = cita.procedimientos.all()
     ProcedimientoFormSet = modelformset_factory(Procedimiento, fields=('id', 'costo',), extra=0)
+    pago = Pago.objects.filter(cita=cita).first()
 
     if request.method == 'POST':
         formset = ProcedimientoFormSet(request.POST, queryset=procedimientos)
@@ -586,8 +613,38 @@ def editar_pago(request, cita_id):
             formset.save()
             # Refresca los procedimientos desde la base de datos
             procedimientos = cita.procedimientos.all()
-            pago = Pago.objects.filter(cita=cita).first()
             if pago:
+                # Obtener el descuento del formulario
+                descuento = request.POST.get('descuento', '0')
+                try:
+                    descuento = Decimal(descuento) if descuento else Decimal('0')
+                except (ValueError, TypeError):
+                    descuento = Decimal('0')
+                
+                # Validar el descuento
+                subtotal = sum([p.costo for p in procedimientos])
+                if descuento < 0:
+                    messages.error(request, "El descuento no puede ser negativo.")
+                    monto_final = sum([p.costo for p in procedimientos])
+                    descuento_actual = pago.descuento
+                    return render(request, 'edit_pago.html', {
+                        'cita': cita,
+                        'formset': formset,
+                        'monto_final': monto_final,
+                        'descuento_actual': descuento_actual,
+                    })
+                if descuento > subtotal:
+                    messages.error(request, f"El descuento no puede exceder el subtotal de C${subtotal:.2f}.")
+                    monto_final = sum([p.costo for p in procedimientos])
+                    descuento_actual = pago.descuento
+                    return render(request, 'edit_pago.html', {
+                        'cita': cita,
+                        'formset': formset,
+                        'monto_final': monto_final,
+                        'descuento_actual': descuento_actual,
+                    })
+                
+                pago.descuento = descuento
                 pago.save()  # Esto recalcula el total
             messages.success(request, "Pago editado correctamente.")
             return redirect('detalle_pago', cita_id=cita.id)
@@ -597,10 +654,12 @@ def editar_pago(request, cita_id):
         formset = ProcedimientoFormSet(queryset=procedimientos)
 
     monto_final = sum([p.costo for p in procedimientos])
+    descuento_actual = pago.descuento if pago else 0
     return render(request, 'edit_pago.html', {
         'cita': cita,
         'formset': formset,
         'monto_final': monto_final,
+        'descuento_actual': descuento_actual,
     })
 
 def detalle_pago(request, cita_id):
@@ -610,7 +669,9 @@ def detalle_pago(request, cita_id):
         messages.warning(request, "Primero debe registrar el pago para ver el detalle.")
         return redirect('home_citas', paciente_id=cita.paciente.id)
     procedimientos = cita.procedimientos.all()
-    monto_final = sum([p.costo for p in procedimientos])
+    # Usar el total del pago que ya incluye el descuento aplicado
+    monto_final = pago.total
+    subtotal = sum([p.costo for p in procedimientos])
     paciente = cita.paciente
 
     return render(request, 'detail_pago.html', {
@@ -618,6 +679,7 @@ def detalle_pago(request, cita_id):
         'pago': pago,
         'procedimientos': procedimientos,
         'monto_final': monto_final,
+        'subtotal': subtotal,
         'paciente': paciente,
     })
     

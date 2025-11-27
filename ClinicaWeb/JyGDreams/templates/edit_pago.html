@@ -28,10 +28,30 @@
         </div>
         <div class="col-md-6">
           <label class="form-label">Valor</label>
-          {{ form.costo }}
+          <input type="text" class="form-control" value="{{ form.instance.costo }}" readonly>
+          {{ form.costo.as_hidden }}
         </div>
       </div>
       {% endfor %}
+
+      <!-- Campo de descuento -->
+      <div class="row mb-4">
+        <div class="col-md-6 offset-md-6">
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="habilitar-descuento" 
+                   {% if descuento_actual > 0 %}checked{% endif %}>
+            <label class="form-check-label" for="habilitar-descuento">
+              Aplicar descuento
+            </label>
+          </div>
+          <div class="mb-3" id="campo-descuento" {% if descuento_actual <= 0 %}style="display: none;"{% endif %}>
+            <label class="form-label">Descuento (C$)</label>
+            <input type="number" class="form-control" id="descuento" name="descuento" 
+                   step="0.01" min="0" value="{{ descuento_actual|default:0 }}" placeholder="0.00">
+            <div id="error-descuento" class="text-danger mt-1" style="display: none;"></div>
+          </div>
+        </div>
+      </div>
 
       <div class="row mb-4">
         <div class="col-md-6 offset-md-6">
@@ -56,40 +76,150 @@
   document.addEventListener('DOMContentLoaded', function() {
     const inputs = document.querySelectorAll('input[name$="costo"]');
     const montoFinal = document.getElementById('monto-final');
-    function actualizarTotal() {
-      let total = 0;
+    const checkboxDescuento = document.getElementById('habilitar-descuento');
+    const campoDescuento = document.getElementById('campo-descuento');
+    const inputDescuento = document.getElementById('descuento');
+    const errorDescuento = document.getElementById('error-descuento');
+    
+    // Función para calcular el subtotal
+    function calcularSubtotal() {
+      let subtotal = 0;
       inputs.forEach(input => {
-        total += parseFloat(input.value) || 0;
+        subtotal += parseFloat(input.value) || 0;
       });
-      montoFinal.textContent = '$' + total.toFixed(2);
+      return subtotal;
     }
+    
+    // Función para validar el descuento
+    function validarDescuento(descuento, subtotal) {
+      errorDescuento.style.display = 'none';
+      errorDescuento.textContent = '';
+      inputDescuento.classList.remove('is-invalid');
+      
+      // Validar que no sea negativo
+      if (descuento < 0) {
+        errorDescuento.textContent = 'El descuento no puede ser negativo.';
+        errorDescuento.style.display = 'block';
+        inputDescuento.classList.add('is-invalid');
+        return false;
+      }
+      
+      // Validar que no exceda el subtotal
+      if (descuento > subtotal) {
+        errorDescuento.textContent = `El descuento no puede exceder el subtotal de C$${subtotal.toFixed(2)}.`;
+        errorDescuento.style.display = 'block';
+        inputDescuento.classList.add('is-invalid');
+        return false;
+      }
+      
+      return true;
+    }
+    
+    // Función para actualizar el total
+    function actualizarTotal() {
+      const subtotal = calcularSubtotal();
+      
+      // Si el checkbox está marcado, restar el descuento
+      let descuento = 0;
+      if (checkboxDescuento.checked) {
+        const descuentoValue = parseFloat(inputDescuento.value) || 0;
+        if (validarDescuento(descuentoValue, subtotal)) {
+          descuento = descuentoValue;
+        } else {
+          // Si hay error, limitar el descuento al subtotal
+          descuento = Math.min(descuentoValue, subtotal);
+          if (descuento < 0) descuento = 0;
+        }
+      }
+      
+      const total = Math.max(0, subtotal - descuento);
+      montoFinal.textContent = 'C$' + total.toFixed(2);
+    }
+    
+    // Event listeners para los campos de costo
     inputs.forEach(input => {
       input.addEventListener('input', actualizarTotal);
     });
+    
+    // Event listener para el checkbox de descuento
+    checkboxDescuento.addEventListener('change', function() {
+      if (this.checked) {
+        campoDescuento.style.display = 'block';
+        inputDescuento.focus();
+      } else {
+        campoDescuento.style.display = 'none';
+        inputDescuento.value = '0';
+        errorDescuento.style.display = 'none';
+        inputDescuento.classList.remove('is-invalid');
+        actualizarTotal();
+      }
+    });
+    
+    // Event listener para el campo de descuento - prevenir letras
+    inputDescuento.addEventListener('input', function(e) {
+      // Remover cualquier carácter que no sea número o punto decimal
+      this.value = this.value.replace(/[^0-9.]/g, '');
+      // Prevenir múltiples puntos decimales
+      const parts = this.value.split('.');
+      if (parts.length > 2) {
+        this.value = parts[0] + '.' + parts.slice(1).join('');
+      }
+      actualizarTotal();
+    });
+    
+    // Validar antes de enviar el formulario
+    inputDescuento.addEventListener('blur', function() {
+      const subtotal = calcularSubtotal();
+      const descuentoValue = parseFloat(this.value) || 0;
+      validarDescuento(descuentoValue, subtotal);
+    });
+    
+    // Si hay un descuento inicial, mostrar el campo y actualizar el total
+    const descuentoInicial = parseFloat(inputDescuento.value) || 0;
+    if (descuentoInicial > 0) {
+      checkboxDescuento.checked = true;
+      campoDescuento.style.display = 'block';
+    }
+    
+    // Inicializar el total
+    actualizarTotal();
 
     const form = document.querySelector('form');
-  if (form) {
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-      Swal.fire({
-        title: 'Editar Pago',
-        text: '¿Deseas guardar los cambios?',
-        icon: 'question',
-        confirmButtonColor: '#198754',
-        cancelButtonColor: '#d33',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, guardar',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          form.submit();
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Validar descuento antes de enviar
+        if (checkboxDescuento.checked) {
+          const subtotal = calcularSubtotal();
+          const descuentoValue = parseFloat(inputDescuento.value) || 0;
+          if (!validarDescuento(descuentoValue, subtotal)) {
+            Swal.fire({
+              title: 'Error de Validación',
+              text: 'Por favor, corrige el valor del descuento antes de continuar.',
+              icon: 'error',
+              confirmButtonText: 'Entendido'
+            });
+            return;
+          }
         }
+        
+        Swal.fire({
+          title: 'Editar Pago',
+          text: '¿Deseas guardar los cambios?',
+          icon: 'question',
+          confirmButtonColor: '#198754',
+          cancelButtonColor: '#d33',
+          showCancelButton: true,
+          confirmButtonText: 'Sí, guardar',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            form.submit();
+          }
+        });
       });
-    });
-  }
-
-
-
+    }
   });
 </script>
 

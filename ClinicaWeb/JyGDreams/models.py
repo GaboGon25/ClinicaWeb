@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from decimal import Decimal
 
 class Paciente(models.Model):
     nombre = models.CharField(max_length=100)
@@ -60,15 +61,22 @@ class Pago(models.Model):
     cita = models.ForeignKey(Cita, on_delete=models.CASCADE)
     fecha = models.DateField()
     total = models.DecimalField(max_digits=10, decimal_places=2)
+    descuento = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def clean(self):
         if self.total < 0:
             raise ValidationError("El total no puede ser negativo.")
+        if self.descuento < 0:
+            raise ValidationError("El descuento no puede ser negativo.")
 
     def save(self, *args, **kwargs):
         # Calcula el total sumando el costo de todos los procedimientos de la cita
         procedimientos = self.cita.procedimientos.all()
-        self.total = sum(p.costo for p in procedimientos)
+        subtotal = sum(p.costo for p in procedimientos)
+        # Resta el descuento del subtotal
+        total_calculado = subtotal - self.descuento
+        # Asegura que el total no sea negativo usando Decimal
+        self.total = max(Decimal('0'), total_calculado)
         super().save(*args, **kwargs)
 
     def __str__(self):
