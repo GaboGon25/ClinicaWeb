@@ -215,6 +215,23 @@ def detalle_expediente(request, expediente_id):
     for c in cuidados:
         if c.cuidado.nombre == "Otros":
             otro_valor = c.otro
+    
+    # Obtener citas realizadas (con pago)
+    citas_realizadas = Cita.objects.filter(
+        paciente=expediente.paciente,
+        pago__isnull=False
+    ).order_by('-fecha', '-hora')
+    
+    # Calcular totales para cada cita y total general
+    citas_con_totales = []
+    total_general = 0
+    for cita in citas_realizadas:
+        total_cita = sum([float(proc.costo) for proc in cita.procedimientos.all()])
+        total_general += total_cita
+        citas_con_totales.append({
+            'cita': cita,
+            'total': total_cita
+        })
 
     return render(request, 'detail_expediente.html', {
         'expediente': expediente,
@@ -223,6 +240,8 @@ def detalle_expediente(request, expediente_id):
         'cuidados_nombres': cuidados_nombres,
         'otro_valor': otro_valor,
         'cuidados_lista': cuidados_lista,
+        'citas_con_totales': citas_con_totales,
+        'total_general': total_general,
     })
 
 def editar_expediente(request, expediente_id):
@@ -1144,6 +1163,70 @@ def generar_pdf_expediente(request, expediente_id):
     # Historial clínico
     elements.append(Paragraph("<b>Historial Clínico</b>", section_title))
     elements.append(Paragraph(expediente.historial_clinico or "No registrado.", normal_style))
+    elements.append(Spacer(1, 16))
+
+    # Citas realizadas
+    elements.append(Paragraph("<b>Historial de Citas Realizadas</b>", section_title))
+    citas_realizadas = Cita.objects.filter(
+        paciente=paciente,
+        pago__isnull=False
+    ).order_by('fecha')
+    
+    if citas_realizadas.exists():
+        # Preparar datos para la tabla
+        table_data = [
+            ['Fecha', 'Hora', 'Procedimientos']
+        ]
+        
+        for cita in citas_realizadas:
+            # Obtener procedimientos de la cita
+            procedimientos_cita = cita.procedimientos.all()
+            
+            # Preparar información de procedimientos
+            procedimientos_texto = []
+            
+            for proc in procedimientos_cita:
+                procedimientos_texto.append(proc.titulo)
+            
+            # Formatear fecha y hora
+            fecha_formateada = cita.fecha.strftime("%d/%m/%Y")
+            hora_formateada = cita.hora.strftime("%H:%M")
+            
+            # Agregar fila a la tabla
+            table_data.append([
+                fecha_formateada,
+                hora_formateada,
+                '\n'.join(procedimientos_texto) if procedimientos_texto else 'Sin procedimientos'
+            ])
+        
+        # Crear tabla
+        table = Table(table_data, colWidths=[1.5*inch, 1*inch, 3.5*inch])
+        
+        # Estilo de la tabla
+        table_style = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#198754')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f0f8f5')),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#198754')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ALIGN', (0, 0), (0, -1), 'CENTER'),  # Fecha centrada
+            ('ALIGN', (1, 1), (1, -1), 'CENTER'),   # Hora centrada
+            ('ALIGN', (2, 1), (2, -1), 'LEFT'),     # Procedimientos alineados a la izquierda
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ])
+        
+        table.setStyle(table_style)
+        elements.append(table)
+        elements.append(Spacer(1, 10))
+        elements.append(Paragraph(f"<b>Total de citas realizadas:</b> {citas_realizadas.count()}", normal_style))
+    else:
+        elements.append(Paragraph("No hay citas realizadas registradas.", normal_style))
+    
     elements.append(Spacer(1, 16))
 
     # Fecha de generación
