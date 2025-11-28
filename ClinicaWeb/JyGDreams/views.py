@@ -917,30 +917,25 @@ def generar_pdf_citas(request, paciente_id):
             ['Fecha', 'Procedimientos', 'Precios', 'Total']
         ]
         
-        total_general = 0
+        total_general = 0.0
         
         for cita in citas_realizadas:
-            # Obtener procedimientos de la cita
-            procedimientos_cita = cita.procedimientos.all()
-            
-            # Preparar información de procedimientos y precios
+            # Obtener los CitaProcedimiento de la cita para considerar descuentos
+            cps = CitaProcedimiento.objects.filter(cita=cita).select_related('procedimiento')
             procedimientos_texto = []
             precios_texto = []
-            total_cita = 0
+            total_cita = 0.0
             
-            for proc in procedimientos_cita:
-                procedimientos_texto.append(proc.titulo)
-                precios_texto.append(f"C$ {proc.costo:,.2f}")
-                total_cita += float(proc.costo)
+            for cp in cps:
+                procedimientos_texto.append(cp.procedimiento.titulo)
+                precios_texto.append(f"C$ {float(cp.subtotal):,.2f}")  # subtotal = costo - descuento
+                total_cita += float(cp.subtotal)
             
-            # Formatear fecha
             fecha_formateada = cita.fecha.strftime("%d/%m/%Y")
-            
-            # Agregar fila a la tabla
             table_data.append([
                 fecha_formateada,
-                '\n'.join(procedimientos_texto),
-                '\n'.join(precios_texto),
+                '\n'.join(procedimientos_texto) if procedimientos_texto else 'Sin procedimientos',
+                '\n'.join(precios_texto) if precios_texto else '-',
                 f"C$ {total_cita:,.2f}"
             ])
             
@@ -963,10 +958,10 @@ def generar_pdf_citas(request, paciente_id):
             ('BACKGROUND', (0, 1), (-1, -2), colors.beige),
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('ALIGN', (0, 0), (0, -1), 'CENTER'),  # Fecha centrada
-            ('ALIGN', (1, 1), (1, -2), 'LEFT'),     # Procedimientos alineados a la izquierda
-            ('ALIGN', (2, 1), (2, -2), 'RIGHT'),    # Precios alineados a la derecha
-            ('ALIGN', (3, 1), (3, -2), 'RIGHT'),    # Total alineado a la derecha
+            ('ALIGN', (0, 0), (0, -1), 'CENTER'),
+            ('ALIGN', (1, 1), (1, -2), 'LEFT'),
+            ('ALIGN', (2, 1), (2, -2), 'RIGHT'),
+            ('ALIGN', (3, 1), (3, -2), 'RIGHT'),
             ('FONTNAME', (0, 1), (-1, -2), 'Helvetica'),
             ('FONTSIZE', (0, 1), (-1, -2), 10),
             ('BACKGROUND', (0, -1), (-1, -1), colors.lightblue),
@@ -977,27 +972,21 @@ def generar_pdf_citas(request, paciente_id):
         table.setStyle(table_style)
         elements.append(table)
         
-        # Información adicional
         elements.append(Spacer(1, 20))
         elements.append(Paragraph(f"<b>Total de citas realizadas:</b> {citas_realizadas.count()}", styles['Normal']))
         elements.append(Paragraph(f"<b>Fecha de generación:</b> {datetime.now().strftime('%d/%m/%Y %H:%M')}", styles['Normal']))
-        
     else:
-        # Si no hay citas realizadas
         elements.append(Paragraph("No hay citas realizadas para este paciente.", styles['Normal']))
     
     # Construir el PDF
     doc.build(elements)
     
-    # Obtener el valor del buffer
+    # Obtener el valor del buffer y devolver respuesta
     pdf = buffer.getvalue()
     buffer.close()
-    
-    # Crear la respuesta HTTP
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="citas_realizadas_{paciente.apellido}_{paciente.nombre}.pdf"'
     response.write(pdf)
-    
     return response
 
 def ajax_filtrar_citas(request, paciente_id):
