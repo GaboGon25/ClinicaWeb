@@ -53,6 +53,18 @@ class Procedimiento(models.Model):
 class CitaProcedimiento(models.Model):
     cita = models.ForeignKey('Cita', on_delete=models.CASCADE)
     procedimiento = models.ForeignKey('Procedimiento', on_delete=models.CASCADE)
+    descuento = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    def clean(self):
+        if self.descuento < 0:
+            raise ValidationError("El descuento no puede ser negativo.")
+        if self.descuento > self.procedimiento.costo:
+            raise ValidationError("El descuento no puede exceder el costo del procedimiento.")
+
+    @property
+    def subtotal(self):
+        """Calcula el subtotal del procedimiento (costo - descuento)"""
+        return max(Decimal('0'), self.procedimiento.costo - self.descuento)
 
     def __str__(self):
         return f"{self.cita} - {self.procedimiento}"
@@ -61,22 +73,18 @@ class Pago(models.Model):
     cita = models.ForeignKey(Cita, on_delete=models.CASCADE)
     fecha = models.DateField()
     total = models.DecimalField(max_digits=10, decimal_places=2)
-    descuento = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def clean(self):
         if self.total < 0:
             raise ValidationError("El total no puede ser negativo.")
-        if self.descuento < 0:
-            raise ValidationError("El descuento no puede ser negativo.")
 
     def save(self, *args, **kwargs):
-        # Calcula el total sumando el costo de todos los procedimientos de la cita
-        procedimientos = self.cita.procedimientos.all()
-        subtotal = sum(p.costo for p in procedimientos)
-        # Resta el descuento del subtotal
-        total_calculado = subtotal - self.descuento
+        # Calcula el total sumando los subtotales de todos los procedimientos de la cita
+        # Cada procedimiento tiene su propio descuento aplicado
+        cita_procedimientos = CitaProcedimiento.objects.filter(cita=self.cita)
+        self.total = sum(cp.subtotal for cp in cita_procedimientos)
         # Asegura que el total no sea negativo usando Decimal
-        self.total = max(Decimal('0'), total_calculado)
+        self.total = max(Decimal('0'), self.total)
         super().save(*args, **kwargs)
 
     def __str__(self):

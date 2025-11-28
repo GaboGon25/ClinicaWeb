@@ -21,42 +21,51 @@
       {{ formset.management_form }}
       {% for form in formset %}
       {{ form.id }}
-      <div class="row mb-4">
-        <div class="col-md-6">
-          <label class="form-label">Procedimiento</label>
-          <input type="text" class="form-control" value="{{ form.instance.titulo }}" readonly>
+      <div class="procedimiento-item mb-4 p-3 border rounded">
+        <h5 class="mb-3">{{ form.instance.procedimiento.titulo }}</h5>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label fw-bold">Costo del Procedimiento</label>
+            <input type="text" class="form-control" value="C${{ form.instance.procedimiento.costo }}" readonly>
+          </div>
+          <div class="col-md-6">
+            <div class="form-check mb-2">
+              <input class="form-check-input checkbox-descuento" 
+                     type="checkbox" 
+                     id="habilitar_descuento_{{ form.instance.id }}"
+                     data-procedimiento-id="{{ form.instance.id }}"
+                     {% if form.instance.descuento > 0 %}checked{% endif %}>
+              <label class="form-check-label" for="habilitar_descuento_{{ form.instance.id }}">
+                Aplicar descuento
+              </label>
+            </div>
+            <div class="campo-descuento" id="campo_descuento_{{ form.instance.id }}" 
+                 {% if form.instance.descuento <= 0 %}style="display: none;"{% endif %}>
+              <label class="form-label fw-bold">Descuento (C$)</label>
+              {{ form.descuento }}
+              <div class="error-descuento text-danger mt-1" id="error_{{ form.instance.id }}" style="display: none;"></div>
+            </div>
+            <!-- Campo oculto para almacenar el costo del procedimiento -->
+            <input type="hidden" id="costo_{{ form.instance.id }}" value="{{ form.instance.procedimiento.costo }}">
+          </div>
         </div>
-        <div class="col-md-6">
-          <label class="form-label">Valor</label>
-          <input type="text" class="form-control" value="{{ form.instance.costo }}" readonly>
-          {{ form.costo.as_hidden }}
+        <div class="row">
+          <div class="col-md-6 offset-md-6">
+            <div class="d-flex justify-content-between align-items-center">
+              <strong>Subtotal:</strong>
+              <span class="subtotal-procedimiento fw-bold text-success" id="subtotal_{{ form.instance.id }}">
+                C${{ form.instance.subtotal }}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
       {% endfor %}
 
-      <!-- Campo de descuento -->
-      <div class="row mb-4">
-        <div class="col-md-6 offset-md-6">
-          <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" id="habilitar-descuento" 
-                   {% if descuento_actual > 0 %}checked{% endif %}>
-            <label class="form-check-label" for="habilitar-descuento">
-              Aplicar descuento
-            </label>
-          </div>
-          <div class="mb-3" id="campo-descuento" {% if descuento_actual <= 0 %}style="display: none;"{% endif %}>
-            <label class="form-label">Descuento (C$)</label>
-            <input type="number" class="form-control" id="descuento" name="descuento" 
-                   step="0.01" min="0" value="{{ descuento_actual|default:0 }}" placeholder="0.00">
-            <div id="error-descuento" class="text-danger mt-1" style="display: none;"></div>
-          </div>
-        </div>
-      </div>
-
       <div class="row mb-4">
         <div class="col-md-6 offset-md-6">
           <div class="d-flex justify-content-between align-items-center">
-            <strong class="fs-5">Monto Final:</strong>
+            <strong class="fs-5">Total:</strong>
             <span id="monto-final" class="form-control text-success fw-bold text-end" readonly>C${{ monto_final }}</span>
           </div>
         </div>
@@ -72,137 +81,336 @@
 </div>
 
 <script>
-  // Actualiza el monto final automáticamente al cambiar valores
   document.addEventListener('DOMContentLoaded', function() {
-    const inputs = document.querySelectorAll('input[name$="costo"]');
     const montoFinal = document.getElementById('monto-final');
-    const checkboxDescuento = document.getElementById('habilitar-descuento');
-    const campoDescuento = document.getElementById('campo-descuento');
-    const inputDescuento = document.getElementById('descuento');
-    const errorDescuento = document.getElementById('error-descuento');
+    // Buscar todos los inputs de descuento (pueden tener diferentes formatos de nombre)
+    const descuentoInputs = document.querySelectorAll('input[name*="-descuento"], input[id*="descuento"]');
+    const checkboxesDescuento = document.querySelectorAll('.checkbox-descuento');
     
-    // Función para calcular el subtotal
-    function calcularSubtotal() {
-      let subtotal = 0;
-      inputs.forEach(input => {
-        subtotal += parseFloat(input.value) || 0;
-      });
-      return subtotal;
+    // Función para obtener el costo de un procedimiento
+    function obtenerCosto(procedimientoId) {
+      // Primero intentar obtener del campo oculto
+      const costoHidden = document.getElementById(`costo_${procedimientoId}`);
+      if (costoHidden) {
+        return parseFloat(costoHidden.value) || 0;
+      }
+      // Si no existe, obtener del input readonly
+      const procedimientoItem = document.querySelector(`#habilitar_descuento_${procedimientoId}`).closest('.procedimiento-item');
+      if (procedimientoItem) {
+        const costoInput = procedimientoItem.querySelector('input[readonly]');
+        if (costoInput) {
+          const costoTexto = costoInput.value.replace('C$', '').trim();
+          return parseFloat(costoTexto) || 0;
+        }
+      }
+      return 0;
     }
     
-    // Función para validar el descuento
-    function validarDescuento(descuento, subtotal) {
-      errorDescuento.style.display = 'none';
-      errorDescuento.textContent = '';
-      inputDescuento.classList.remove('is-invalid');
+    // Función para obtener el ID del procedimiento desde el input
+    function obtenerProcedimientoId(input) {
+      // Intentar obtener desde el name attribute (formset de Django)
+      const name = input.name || '';
+      let match = name.match(/form-(\d+)-descuento/);
+      if (match) {
+        // Si es un formset, necesitamos obtener el ID real del procedimiento
+        const formIndex = match[1];
+        const idInput = document.querySelector(`input[name="form-${formIndex}-id"]`);
+        if (idInput) {
+          return idInput.value;
+        }
+        return formIndex; // Fallback al índice del form
+      }
       
-      // Validar que no sea negativo
+      // Intentar otro patrón
+      match = name.match(/(\d+)-descuento/);
+      if (match) {
+        return match[1];
+      }
+      
+      // Intentar obtener desde el checkbox más cercano
+      const procedimientoItem = input.closest('.procedimiento-item');
+      if (procedimientoItem) {
+        const checkbox = procedimientoItem.querySelector('.checkbox-descuento');
+        if (checkbox) {
+          return checkbox.dataset.procedimientoId;
+        }
+      }
+      
+      return null;
+    }
+    
+    // Función para validar un descuento individual
+    function validarDescuento(input) {
+      const procedimientoId = obtenerProcedimientoId(input);
+      if (!procedimientoId) return true;
+      
+      const costo = obtenerCosto(procedimientoId);
+      const descuento = parseFloat(input.value) || 0;
+      const errorDiv = document.getElementById(`error_${procedimientoId}`);
+      
+      if (errorDiv) {
+        errorDiv.style.display = 'none';
+        errorDiv.textContent = '';
+      }
+      input.classList.remove('is-invalid');
+      
       if (descuento < 0) {
-        errorDescuento.textContent = 'El descuento no puede ser negativo.';
-        errorDescuento.style.display = 'block';
-        inputDescuento.classList.add('is-invalid');
+        if (errorDiv) {
+          errorDiv.textContent = 'El descuento no puede ser negativo.';
+          errorDiv.style.display = 'block';
+        }
+        input.classList.add('is-invalid');
         return false;
       }
       
-      // Validar que no exceda el subtotal
-      if (descuento > subtotal) {
-        errorDescuento.textContent = `El descuento no puede exceder el subtotal de C$${subtotal.toFixed(2)}.`;
-        errorDescuento.style.display = 'block';
-        inputDescuento.classList.add('is-invalid');
+      if (descuento > costo) {
+        if (errorDiv) {
+          errorDiv.textContent = `El descuento no puede exceder el costo de C$${costo.toFixed(2)}.`;
+          errorDiv.style.display = 'block';
+        }
+        input.classList.add('is-invalid');
         return false;
       }
       
       return true;
     }
     
-    // Función para actualizar el total
-    function actualizarTotal() {
-      const subtotal = calcularSubtotal();
+    // Función para actualizar el subtotal de un procedimiento
+    function actualizarSubtotal(procedimientoId) {
+      const checkbox = document.getElementById(`habilitar_descuento_${procedimientoId}`);
+      const subtotalElement = document.getElementById(`subtotal_${procedimientoId}`);
       
-      // Si el checkbox está marcado, restar el descuento
-      let descuento = 0;
-      if (checkboxDescuento.checked) {
-        const descuentoValue = parseFloat(inputDescuento.value) || 0;
-        if (validarDescuento(descuentoValue, subtotal)) {
-          descuento = descuentoValue;
-        } else {
-          // Si hay error, limitar el descuento al subtotal
-          descuento = Math.min(descuentoValue, subtotal);
-          if (descuento < 0) descuento = 0;
+      if (!subtotalElement) {
+        return;
+      }
+      
+      // Buscar el input de descuento de diferentes formas
+      let input = null;
+      // Intentar por name attribute con el ID
+      input = document.querySelector(`input[name="${procedimientoId}-descuento"]`);
+      // Si no se encuentra, buscar en el mismo procedimiento-item
+      if (!input && checkbox) {
+        const procedimientoItem = checkbox.closest('.procedimiento-item');
+        if (procedimientoItem) {
+          input = procedimientoItem.querySelector('input[name*="-descuento"]');
         }
       }
       
-      const total = Math.max(0, subtotal - descuento);
-      montoFinal.textContent = 'C$' + total.toFixed(2);
+      const costo = obtenerCosto(procedimientoId);
+      let descuento = 0;
+      
+      if (checkbox && checkbox.checked && input) {
+        descuento = parseFloat(input.value) || 0;
+      }
+      
+      const subtotal = Math.max(0, costo - descuento);
+      subtotalElement.textContent = 'C$' + subtotal.toFixed(2);
     }
     
-    // Event listeners para los campos de costo
-    inputs.forEach(input => {
-      input.addEventListener('input', actualizarTotal);
+    // Función para actualizar el total general
+    function actualizarTotal() {
+      let total = 0;
+      checkboxesDescuento.forEach(checkbox => {
+        const procedimientoId = checkbox.dataset.procedimientoId;
+        const costo = obtenerCosto(procedimientoId);
+        let descuento = 0;
+        
+        if (checkbox.checked) {
+          // Buscar el input de descuento
+          let input = document.querySelector(`input[name="${procedimientoId}-descuento"]`);
+          if (!input) {
+            const procedimientoItem = checkbox.closest('.procedimiento-item');
+            if (procedimientoItem) {
+              input = procedimientoItem.querySelector('input[name*="-descuento"]');
+            }
+          }
+          if (input) {
+            descuento = parseFloat(input.value) || 0;
+          }
+        }
+        
+        total += Math.max(0, costo - descuento);
+      });
+      if (montoFinal) {
+        montoFinal.textContent = 'C$' + total.toFixed(2);
+      }
+    }
+    
+    // Event listeners para los checkboxes
+    checkboxesDescuento.forEach(checkbox => {
+      checkbox.addEventListener('change', function() {
+        const procedimientoId = this.dataset.procedimientoId;
+        const campoDescuento = document.getElementById(`campo_descuento_${procedimientoId}`);
+        const procedimientoItem = this.closest('.procedimiento-item');
+        
+        // Buscar el input de descuento dentro del procedimiento-item
+        let inputDescuento = null;
+        if (procedimientoItem) {
+          inputDescuento = procedimientoItem.querySelector('input[name*="-descuento"]');
+        }
+        // Si no se encuentra, intentar por name directo
+        if (!inputDescuento) {
+          inputDescuento = document.querySelector(`input[name="${procedimientoId}-descuento"]`);
+        }
+        
+        const errorDiv = document.getElementById(`error_${procedimientoId}`);
+        
+        if (this.checked) {
+          if (campoDescuento) {
+            campoDescuento.style.display = 'block';
+          }
+          if (inputDescuento) {
+            inputDescuento.focus();
+            // Asegurar que el valor se actualice cuando se muestra
+            setTimeout(() => {
+              actualizarSubtotal(procedimientoId);
+              actualizarTotal();
+            }, 50);
+          }
+        } else {
+          if (campoDescuento) {
+            campoDescuento.style.display = 'none';
+          }
+          if (inputDescuento) {
+            inputDescuento.value = '0';
+          }
+          if (errorDiv) {
+            errorDiv.style.display = 'none';
+          }
+          if (inputDescuento) {
+            inputDescuento.classList.remove('is-invalid');
+          }
+          actualizarSubtotal(procedimientoId);
+          actualizarTotal();
+        }
+      });
     });
     
-    // Event listener para el checkbox de descuento
-    checkboxDescuento.addEventListener('change', function() {
-      if (this.checked) {
-        campoDescuento.style.display = 'block';
-        inputDescuento.focus();
-      } else {
-        campoDescuento.style.display = 'none';
-        inputDescuento.value = '0';
-        errorDescuento.style.display = 'none';
-        inputDescuento.classList.remove('is-invalid');
-        actualizarTotal();
+    // Event listeners para cada campo de descuento
+    descuentoInputs.forEach(input => {
+      // Prevenir letras y actualizar en tiempo real
+      input.addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^0-9.]/g, '');
+        const parts = this.value.split('.');
+        if (parts.length > 2) {
+          this.value = parts[0] + '.' + parts.slice(1).join('');
+        }
+        const procedimientoId = obtenerProcedimientoId(this);
+        if (procedimientoId) {
+          // Actualizar inmediatamente mientras se escribe
+          actualizarSubtotal(procedimientoId);
+          actualizarTotal();
+        }
+      });
+      
+      // Validar al perder el foco
+      input.addEventListener('blur', function() {
+        validarDescuento(this);
+        // Asegurar que los valores se actualicen después de la validación
+        const procedimientoId = obtenerProcedimientoId(this);
+        if (procedimientoId) {
+          actualizarSubtotal(procedimientoId);
+          actualizarTotal();
+        }
+      });
+      
+      // También actualizar con keyup para mejor respuesta
+      input.addEventListener('keyup', function() {
+        const procedimientoId = obtenerProcedimientoId(this);
+        if (procedimientoId) {
+          actualizarSubtotal(procedimientoId);
+          actualizarTotal();
+        }
+      });
+    });
+    
+    // Asegurar que los campos de descuento tengan los atributos necesarios
+    descuentoInputs.forEach(input => {
+      const procedimientoId = obtenerProcedimientoId(input);
+      if (procedimientoId) {
+        // Agregar clase para facilitar la identificación
+        input.classList.add('descuento-input-field');
+        // Asegurar que el campo tenga el atributo step
+        if (!input.hasAttribute('step')) {
+          input.setAttribute('step', '0.01');
+        }
+        if (!input.hasAttribute('min')) {
+          input.setAttribute('min', '0');
+        }
       }
     });
     
-    // Event listener para el campo de descuento - prevenir letras
-    inputDescuento.addEventListener('input', function(e) {
-      // Remover cualquier carácter que no sea número o punto decimal
-      this.value = this.value.replace(/[^0-9.]/g, '');
-      // Prevenir múltiples puntos decimales
-      const parts = this.value.split('.');
-      if (parts.length > 2) {
-        this.value = parts[0] + '.' + parts.slice(1).join('');
-      }
+    // Función para inicializar todos los valores
+    function inicializarValores() {
+      checkboxesDescuento.forEach(checkbox => {
+        const procedimientoId = checkbox.dataset.procedimientoId;
+        const procedimientoItem = checkbox.closest('.procedimiento-item');
+        
+        // Buscar el input de descuento
+        let inputDescuento = null;
+        if (procedimientoItem) {
+          inputDescuento = procedimientoItem.querySelector('input[name*="-descuento"]');
+        }
+        
+        // Si hay un valor en el input y es mayor a 0, asegurar que el checkbox esté marcado
+        if (inputDescuento && parseFloat(inputDescuento.value) > 0) {
+          checkbox.checked = true;
+          const campoDescuento = document.getElementById(`campo_descuento_${procedimientoId}`);
+          if (campoDescuento) {
+            campoDescuento.style.display = 'block';
+          }
+        }
+        
+        // Actualizar el subtotal
+        actualizarSubtotal(procedimientoId);
+      });
+      
+      // Actualizar el total
       actualizarTotal();
-    });
-    
-    // Validar antes de enviar el formulario
-    inputDescuento.addEventListener('blur', function() {
-      const subtotal = calcularSubtotal();
-      const descuentoValue = parseFloat(this.value) || 0;
-      validarDescuento(descuentoValue, subtotal);
-    });
-    
-    // Si hay un descuento inicial, mostrar el campo y actualizar el total
-    const descuentoInicial = parseFloat(inputDescuento.value) || 0;
-    if (descuentoInicial > 0) {
-      checkboxDescuento.checked = true;
-      campoDescuento.style.display = 'block';
     }
     
-    // Inicializar el total
-    actualizarTotal();
+    // Inicializar valores al cargar
+    inicializarValores();
+    
+    // Forzar actualización después de un pequeño delay para asegurar que todo esté cargado
+    setTimeout(() => {
+      inicializarValores();
+    }, 200);
 
     const form = document.querySelector('form');
     if (form) {
       form.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        // Validar descuento antes de enviar
-        if (checkboxDescuento.checked) {
-          const subtotal = calcularSubtotal();
-          const descuentoValue = parseFloat(inputDescuento.value) || 0;
-          if (!validarDescuento(descuentoValue, subtotal)) {
-            Swal.fire({
-              title: 'Error de Validación',
-              text: 'Por favor, corrige el valor del descuento antes de continuar.',
-              icon: 'error',
-              confirmButtonText: 'Entendido'
-            });
-            return;
+        let hayErrores = false;
+        checkboxesDescuento.forEach(checkbox => {
+          if (checkbox.checked) {
+            const procedimientoId = checkbox.dataset.procedimientoId;
+            const input = document.querySelector(`input[name="${procedimientoId}-descuento"]`);
+            if (input && !validarDescuento(input)) {
+              hayErrores = true;
+            }
           }
+        });
+        
+        if (hayErrores) {
+          Swal.fire({
+            title: 'Error de Validación',
+            text: 'Por favor, corrige los valores de descuento antes de continuar.',
+            icon: 'error',
+            confirmButtonText: 'Entendido'
+          });
+          return;
         }
+        
+        // Asegurar que los descuentos de checkboxes no marcados sean 0
+        checkboxesDescuento.forEach(checkbox => {
+          const procedimientoId = checkbox.dataset.procedimientoId;
+          const input = document.querySelector(`input[name="${procedimientoId}-descuento"]`);
+          if (!checkbox.checked && input) {
+            input.value = '0';
+          }
+        });
         
         Swal.fire({
           title: 'Editar Pago',
