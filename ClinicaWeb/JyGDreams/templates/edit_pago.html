@@ -139,7 +139,7 @@
       return null;
     }
     
-    // Función para validar un descuento individual
+    // Función para validar un descuento individual (validación final)
     function validarDescuento(input) {
       const procedimientoId = obtenerProcedimientoId(input);
       if (!procedimientoId) return true;
@@ -172,6 +172,47 @@
         return false;
       }
       
+      return true;
+    }
+    
+    // Función de validación en tiempo real (se ejecuta mientras el usuario escribe)
+    function validarEnTiempoReal(input) {
+      const procedimientoId = obtenerProcedimientoId(input);
+      if (!procedimientoId) return;
+      
+      const costo = obtenerCosto(procedimientoId);
+      const errorDiv = document.getElementById(`error_${procedimientoId}`);
+      
+      if (!errorDiv) return;
+      
+      // Obtener el valor SIN procesar para validar lo que el usuario está escribiendo
+      let valorRaw = input.value;
+      let valor = valorRaw.replace(/[^0-9.]/g, '');
+      const valorNum = parseFloat(valor) || 0;
+      
+      // Validar y mostrar error INMEDIATAMENTE mientras el usuario escribe
+      if (valor && !isNaN(valorNum)) {
+        if (valorNum > costo) {
+          // Mostrar error INMEDIATAMENTE cuando excede
+          errorDiv.textContent = `⚠️ El descuento no puede exceder el costo de C$${costo.toFixed(2)}. Se ajustará automáticamente.`;
+          errorDiv.style.display = 'block';
+          input.classList.add('is-invalid');
+          // Forzar renderizado inmediato
+          errorDiv.offsetHeight; // Force reflow
+          return false;
+        } else if (valorNum < 0) {
+          // Mostrar error si es negativo
+          errorDiv.textContent = '⚠️ El descuento no puede ser negativo.';
+          errorDiv.style.display = 'block';
+          input.classList.add('is-invalid');
+          return false;
+        }
+      }
+      
+      // Limpiar error si está dentro del rango válido
+      errorDiv.style.display = 'none';
+      errorDiv.textContent = '';
+      input.classList.remove('is-invalid');
       return true;
     }
     
@@ -288,16 +329,92 @@
     
     // Event listeners para cada campo de descuento
     descuentoInputs.forEach(input => {
-      // Prevenir letras y actualizar en tiempo real
-      input.addEventListener('input', function(e) {
-        this.value = this.value.replace(/[^0-9.]/g, '');
-        const parts = this.value.split('.');
-        if (parts.length > 2) {
-          this.value = parts[0] + '.' + parts.slice(1).join('');
+      // Prevenir letras, negativos y otros caracteres no válidos al presionar teclas
+      input.addEventListener('keydown', function(e) {
+        // Permitir: números, punto decimal, teclas de control (backspace, delete, tab, etc.)
+        const allowedKeys = [
+          'Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
+          'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+          'Home', 'End'
+        ];
+        
+        // Permitir Ctrl/Cmd + A, C, V, X para copiar/pegar
+        if ((e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x'].includes(e.key.toLowerCase())) {
+          return;
         }
+        
+        // Bloquear letras, 'e', 'E', '+', '-' y otros caracteres no numéricos
+        if (allowedKeys.includes(e.key) || 
+            (e.key >= '0' && e.key <= '9') || 
+            (e.key === '.' && !this.value.includes('.'))) {
+          return;
+        }
+        
+        e.preventDefault();
+      });
+      
+      // Variable para almacenar el timeout de corrección automática
+      let timeoutCorreccion = null;
+      
+      // Prevenir letras y caracteres inválidos al pegar o escribir
+      input.addEventListener('input', function(e) {
+        const procedimientoId = obtenerProcedimientoId(this);
+        if (!procedimientoId) return;
+        
+        const costo = obtenerCosto(procedimientoId);
+        
+        // Limpiar timeout anterior si existe
+        if (timeoutCorreccion) {
+          clearTimeout(timeoutCorreccion);
+          timeoutCorreccion = null;
+        }
+        
+        // Procesar y limpiar el valor
+        let valor = this.value.replace(/[^0-9.]/g, '');
+        
+        // Limitar a un solo punto decimal
+        const parts = valor.split('.');
+        if (parts.length > 2) {
+          valor = parts[0] + '.' + parts.slice(1).join('');
+        }
+        
+        // Limitar decimales a 2 lugares
+        if (parts.length === 2 && parts[1].length > 2) {
+          valor = parts[0] + '.' + parts[1].substring(0, 2);
+        }
+        
+        // Prevenir valores negativos
+        if (valor.startsWith('-')) {
+          valor = valor.replace(/-/g, '');
+        }
+        
+        this.value = valor;
+        
+        const valorNum = parseFloat(valor) || 0;
+        
+        // VALIDAR Y MOSTRAR ERROR INMEDIATAMENTE
+        validarEnTiempoReal(this);
+        
+        // Si excede el costo, programar corrección automática después de que el usuario deje de escribir
+        if (valorNum > costo) {
+          timeoutCorreccion = setTimeout(() => {
+            this.value = costo.toFixed(2);
+            validarEnTiempoReal(this);
+            actualizarSubtotal(procedimientoId);
+            actualizarTotal();
+          }, 1000); // Esperar 1 segundo después de que el usuario deje de escribir
+        }
+        
+        // Actualizar inmediatamente mientras se escribe
+        actualizarSubtotal(procedimientoId);
+        actualizarTotal();
+      });
+      
+      // Validar también en keyup para máxima responsividad
+      input.addEventListener('keyup', function() {
+        validarEnTiempoReal(this);
         const procedimientoId = obtenerProcedimientoId(this);
         if (procedimientoId) {
-          // Actualizar inmediatamente mientras se escribe
           actualizarSubtotal(procedimientoId);
           actualizarTotal();
         }
@@ -305,23 +422,28 @@
       
       // Validar al perder el foco
       input.addEventListener('blur', function() {
+        const procedimientoId = obtenerProcedimientoId(this);
+        if (!procedimientoId) return;
+        
+        const costo = obtenerCosto(procedimientoId);
+        const valor = parseFloat(this.value) || 0;
+        
+        // Corregir valor si es necesario
+        if (valor < 0) {
+          this.value = '0';
+        } else if (valor > costo) {
+          this.value = costo.toFixed(2);
+        } else if (this.value && !isNaN(valor)) {
+          // Formatear a 2 decimales si es necesario
+          this.value = valor.toFixed(2);
+        }
+        
         validarDescuento(this);
         // Asegurar que los valores se actualicen después de la validación
-        const procedimientoId = obtenerProcedimientoId(this);
-        if (procedimientoId) {
-          actualizarSubtotal(procedimientoId);
-          actualizarTotal();
-        }
+        actualizarSubtotal(procedimientoId);
+        actualizarTotal();
       });
       
-      // También actualizar con keyup para mejor respuesta
-      input.addEventListener('keyup', function() {
-        const procedimientoId = obtenerProcedimientoId(this);
-        if (procedimientoId) {
-          actualizarSubtotal(procedimientoId);
-          actualizarTotal();
-        }
-      });
     });
     
     // Asegurar que los campos de descuento tengan los atributos necesarios
@@ -330,12 +452,22 @@
       if (procedimientoId) {
         // Agregar clase para facilitar la identificación
         input.classList.add('descuento-input-field');
+        const costo = obtenerCosto(procedimientoId);
+        
         // Asegurar que el campo tenga el atributo step
         if (!input.hasAttribute('step')) {
           input.setAttribute('step', '0.01');
         }
         if (!input.hasAttribute('min')) {
           input.setAttribute('min', '0');
+        }
+        // Agregar el atributo max basado en el costo del procedimiento
+        input.setAttribute('max', costo);
+        // Agregar data-costo para referencia
+        input.setAttribute('data-costo', costo);
+        // Agregar data-procedimiento-id para facilitar la búsqueda
+        if (!input.hasAttribute('data-procedimiento-id')) {
+          input.setAttribute('data-procedimiento-id', procedimientoId);
         }
       }
     });
@@ -383,32 +515,97 @@
         e.preventDefault();
         
         let hayErrores = false;
-        checkboxesDescuento.forEach(checkbox => {
-          if (checkbox.checked) {
-            const procedimientoId = checkbox.dataset.procedimientoId;
-            const input = document.querySelector(`input[name="${procedimientoId}-descuento"]`);
-            if (input && !validarDescuento(input)) {
+        let mensajesError = [];
+        
+        // Primero, corregir valores y validar TODOS los campos de descuento
+        descuentoInputs.forEach(input => {
+          const procedimientoId = obtenerProcedimientoId(input);
+          if (!procedimientoId) return;
+          
+          const costo = obtenerCosto(procedimientoId);
+          let valor = parseFloat(input.value) || 0;
+          
+          // Corregir valores negativos o que exceden el costo ANTES de validar
+          if (valor < 0) {
+            input.value = '0';
+            valor = 0;
+          } else if (valor > costo) {
+            input.value = costo.toFixed(2);
+            valor = costo;
+          }
+          
+          // Validar el campo
+          const checkbox = document.getElementById(`habilitar_descuento_${procedimientoId}`);
+          const campoDescuento = document.getElementById(`campo_descuento_${procedimientoId}`);
+          
+          // Validar si el campo está visible o tiene un valor
+          const esVisible = campoDescuento && campoDescuento.style.display !== 'none';
+          const tieneValor = valor > 0;
+          
+          if (esVisible || tieneValor || (checkbox && checkbox.checked)) {
+            // Validar usando la función de validación
+            if (!validarDescuento(input)) {
               hayErrores = true;
+              const tituloProcedimiento = checkbox ? checkbox.closest('.procedimiento-item')?.querySelector('h5')?.textContent || 'procedimiento' : 'procedimiento';
+              if (valor > costo) {
+                mensajesError.push(`El descuento de ${tituloProcedimiento} excede el costo de C$${costo.toFixed(2)}.`);
+              } else if (valor < 0) {
+                mensajesError.push(`El descuento de ${tituloProcedimiento} no puede ser negativo.`);
+              }
             }
           }
         });
         
+        // Verificar si hay campos con clase is-invalid (errores visibles)
+        const camposInvalidos = form.querySelectorAll('.descuento-input-field.is-invalid, input[name*="-descuento"].is-invalid');
+        if (camposInvalidos.length > 0) {
+          hayErrores = true;
+        }
+        
+        // Verificar si hay mensajes de error visibles
+        const erroresVisibles = form.querySelectorAll('.error-descuento[style*="block"], .error-descuento:not([style*="none"])');
+        erroresVisibles.forEach(errorDiv => {
+          if (errorDiv.style.display === 'block' || !errorDiv.style.display || errorDiv.textContent.trim() !== '') {
+            hayErrores = true;
+          }
+        });
+        
         if (hayErrores) {
+          let mensaje = 'Por favor, corrige los valores de descuento antes de continuar.';
+          if (mensajesError.length > 0) {
+            mensaje = mensajesError.join('\n');
+          }
+          
           Swal.fire({
             title: 'Error de Validación',
-            text: 'Por favor, corrige los valores de descuento antes de continuar.',
+            html: mensaje.replace(/\n/g, '<br>'),
             icon: 'error',
             confirmButtonText: 'Entendido'
           });
+          
+          // Hacer scroll al primer campo con error
+          const primerError = form.querySelector('.is-invalid, .error-descuento[style*="block"]');
+          if (primerError) {
+            primerError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (primerError.tagName === 'INPUT') {
+              primerError.focus();
+            }
+          }
+          
           return;
         }
         
         // Asegurar que los descuentos de checkboxes no marcados sean 0
         checkboxesDescuento.forEach(checkbox => {
-          const procedimientoId = checkbox.dataset.procedimientoId;
-          const input = document.querySelector(`input[name="${procedimientoId}-descuento"]`);
-          if (!checkbox.checked && input) {
-            input.value = '0';
+          if (!checkbox.checked) {
+            const procedimientoId = checkbox.dataset.procedimientoId;
+            const procedimientoItem = checkbox.closest('.procedimiento-item');
+            if (procedimientoItem) {
+              const input = procedimientoItem.querySelector('input[name*="-descuento"]');
+              if (input) {
+                input.value = '0';
+              }
+            }
           }
         });
         
