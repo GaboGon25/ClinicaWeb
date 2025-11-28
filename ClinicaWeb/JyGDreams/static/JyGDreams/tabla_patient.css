@@ -240,12 +240,18 @@ body {
 }
 
 /* Dropdown mejorado */
+.dropdown {
+    position: relative;
+}
+
 .dropdown-menu {
     border-radius: 1rem;
     border: 1px solid rgba(46, 204, 113, 0.2);
     box-shadow: 0 8px 30px rgba(44, 62, 80, 0.15);
     padding: 0.5rem;
     min-width: 220px;
+    max-width: 280px;
+    z-index: 1050;
 }
 
 .dropdown-item {
@@ -254,6 +260,8 @@ body {
     margin: 0.25rem 0;
     transition: all 0.3s ease;
     font-weight: 500;
+    white-space: nowrap;
+    overflow: visible;
 }
 
 .dropdown-item:hover {
@@ -265,6 +273,79 @@ body {
 .dropdown-item i {
     width: 20px;
     text-align: center;
+}
+
+/* Mejoras para móviles - dropdown */
+@media screen and (max-width: 768px) {
+    /* Asegurar que el contenedor de la tabla permita overflow visible */
+    .tabla-contenedor {
+        overflow-x: auto;
+        overflow-y: visible;
+        position: relative;
+    }
+    
+    /* Asegurar que la celda de acciones permita overflow visible */
+    .tabla-pacientes td:last-child {
+        position: relative;
+        overflow: visible;
+        z-index: 10;
+    }
+    
+    /* Estilos para el dropdown en móviles */
+    .dropdown {
+        position: static;
+    }
+    
+    .dropdown-menu {
+        position: fixed !important;
+        min-width: 200px;
+        max-width: calc(100vw - 20px);
+        left: auto !important;
+        right: 10px !important;
+        transform: none !important;
+        margin-top: 0;
+        z-index: 1055 !important;
+        max-height: calc(100vh - 20px);
+        overflow-y: auto;
+    }
+    
+    .dropdown-menu[data-bs-popper] {
+        position: fixed !important;
+        top: auto !important;
+        bottom: auto !important;
+        left: auto !important;
+        right: 10px !important;
+        transform: none !important;
+    }
+    
+    /* Ajustar posición del dropdown según disponibilidad de espacio */
+    .dropdown-menu.dropdown-menu-end {
+        right: 10px !important;
+        left: auto !important;
+    }
+    
+    /* Asegurar que el body no corte el dropdown */
+    body {
+        overflow-x: hidden;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .dropdown-menu {
+        min-width: 180px;
+        max-width: calc(100vw - 15px);
+        right: 5px !important;
+        font-size: 0.9rem;
+    }
+    
+    .dropdown-item {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.9rem;
+    }
+    
+    .dropdown-item i {
+        font-size: 0.9rem;
+    }
 }
 
 /* === BOTÓN EDITAR === */

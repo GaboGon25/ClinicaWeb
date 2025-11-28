@@ -60,10 +60,10 @@
           <td class="text-center">{{ paciente.ocupacion }}</td>
           <td class="text-center">
             <div class="dropdown">
-              <button class="btn btn-link text-dark p-0" type="button" id="dropdownMenuButton{{ paciente.id }}" data-bs-toggle="dropdown" aria-expanded="false" style="text-decoration: none;">
+              <button class="btn btn-link text-dark p-0" type="button" id="dropdownMenuButton{{ paciente.id }}" data-bs-toggle="dropdown" aria-expanded="false" data-bs-boundary="viewport" style="text-decoration: none;">
                 <i class="bi bi-three-dots-vertical fs-4"></i>
               </button>
-              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton{{ paciente.id }}">
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton{{ paciente.id }}" data-bs-popper="static">
                 <li>
                   <a class="dropdown-item ver-info-paciente" href="#" 
                      data-paciente-id="{{ paciente.id }}"
@@ -229,6 +229,72 @@ document.addEventListener('DOMContentLoaded', function() {
       const direccion = this.getAttribute('data-direccion');
       
       mostrarInfoPaciente(null, nombre, apellido, fechaNacimiento, ocupacion, correo, telefono, direccion);
+    });
+  });
+
+  // Ajustar posición del dropdown en móviles
+  function ajustarDropdownMovil() {
+    if (window.innerWidth <= 768) {
+      const dropdowns = document.querySelectorAll('.dropdown-menu');
+      dropdowns.forEach(menu => {
+        menu.addEventListener('shown.bs.dropdown', function() {
+          const rect = this.getBoundingClientRect();
+          const viewportWidth = window.innerWidth;
+          const viewportHeight = window.innerHeight;
+          
+          // Si el dropdown se sale por la derecha
+          if (rect.right > viewportWidth) {
+            this.style.right = '10px';
+            this.style.left = 'auto';
+          }
+          
+          // Si el dropdown se sale por abajo
+          if (rect.bottom > viewportHeight) {
+            this.style.top = 'auto';
+            this.style.bottom = '100%';
+            this.style.marginBottom = '5px';
+          }
+          
+          // Si el dropdown se sale por arriba
+          if (rect.top < 0) {
+            this.style.top = '100%';
+            this.style.bottom = 'auto';
+            this.style.marginTop = '5px';
+          }
+        });
+      });
+    }
+  }
+
+  // Ejecutar al cargar y al redimensionar
+  ajustarDropdownMovil();
+  window.addEventListener('resize', ajustarDropdownMovil);
+
+  // Ajustar dropdowns existentes cuando se muestran
+  document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(button => {
+    button.addEventListener('shown.bs.dropdown', function() {
+      if (window.innerWidth <= 768) {
+        const dropdown = this.nextElementSibling;
+        if (dropdown && dropdown.classList.contains('dropdown-menu')) {
+          const rect = dropdown.getBoundingClientRect();
+          const viewportWidth = window.innerWidth;
+          const viewportHeight = window.innerHeight;
+          
+          // Ajustar posición horizontal
+          if (rect.right > viewportWidth - 10) {
+            dropdown.style.right = '10px';
+            dropdown.style.left = 'auto';
+          }
+          
+          // Ajustar posición vertical si es necesario
+          if (rect.bottom > viewportHeight - 10) {
+            const buttonRect = this.getBoundingClientRect();
+            dropdown.style.top = 'auto';
+            dropdown.style.bottom = `${window.innerHeight - buttonRect.top + 5}px`;
+            dropdown.style.transform = 'translateY(0)';
+          }
+        }
+      }
     });
   });
 });
