@@ -16,9 +16,11 @@
       <a href="{% url 'generar_pdf_citas' paciente.id %}" class="btn btn-danger shadow-sm rounded-pill px-4 py-2 d-flex align-items-center gap-2 w-100 w-md-auto" target="_blank">
         <i class="bi bi-file-earmark-pdf fs-5"></i> <span class="fw-semibold">Generar PDF</span>
       </a>
+      {% if perms.JyGDreams.add_cita and not is_doctor %}
       <a href="{% url 'agregar_cita' paciente.id %}" class="btn btn-primary shadow-sm rounded-pill px-4 py-2 d-flex align-items-center gap-2 w-100 w-md-auto">
         <i class="bi bi-calendar-plus fs-5"></i> <span class="fw-semibold">Registrar Cita</span>
       </a>
+      {% endif %}
     </div>
   </div>
 

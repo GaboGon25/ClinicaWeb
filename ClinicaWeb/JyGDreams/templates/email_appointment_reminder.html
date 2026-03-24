@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Recordatorio de cita</title>
+</head>
+<body style="font-family: Arial, sans-serif; background:#f4f6f7; padding:20px;">
+  <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+    <div style="text-align:center;margin-bottom:20px;">
+      <img src="{{ logo_url }}" alt="Logo Clínica" style="height:80px;">
+      <h1 style="margin:10px 0 0;font-size:22px;color:#2c3e50;">
+        {{ clinic_name }}
+      </h1>
+    </div>
+
+    <p style="font-size:15px;color:#2c3e50;">
+      Hola Dr. <strong>{{ doctor.first_name }} {{ doctor.last_name }}</strong>,
+    </p>
+
+    <p style="font-size:15px;color:#2c3e50;">
+      Te recordamos que tienes una cita programada en <strong>2 horas</strong>:
+    </p>
+
+    <div style="background:#ecf0f1;padding:16px;border-radius:8px;margin:20px 0;">
+      <h3 style="margin:0 0 10px;color:#2c3e50;">Detalles de la cita:</h3>
+      <p style="margin:5px 0;"><strong>Paciente:</strong> {{ paciente.nombre }} {{ paciente.apellido }}</p>
+      <p style="margin:5px 0;"><strong>Fecha:</strong> {{ fecha|date:"l, d F Y" }}</p>
+      <p style="margin:5px 0;"><strong>Hora:</strong> {{ hora|time:"H:i" }}</p>
+      <p style="margin:5px 0;"><strong>Motivo:</strong> {{ motivo }}</p>
+      <p style="margin:5px 0;"><strong>Teléfono del paciente:</strong> {{ paciente.telefono }}</p>
+    </div>
+
+    <p style="font-size:14px;color:#2c3e50;">
+      Por favor, prepárate para atender a tu paciente a tiempo.
+    </p>
+
+    <hr style="margin:24px 0;border:none;border-top:1px solid #ecf0f1;">
+
+    <p style="font-size:12px;color:#7f8c8d;text-align:center;">
+      Este es un recordatorio automático. No respondas a este correo.
+    </p>
+  </div>
+</body>
+</html>

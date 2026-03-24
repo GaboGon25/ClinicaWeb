@@ -14,6 +14,10 @@ from pathlib import Path
 import os
 import dj_database_url
 from decouple import config
+try:
+    import certifi
+except Exception:
+    certifi = None
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,7 +30,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-!d#48lb5a3wrn0tb+*gr7#4uc%z(&+zs=r*=x%piobi9_4yhj_')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = []
 
@@ -140,6 +144,25 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'JyGDreams', 'static'),
 ]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Email (SMTP) - Recuperación de contraseña
+# Configurado vía variables .env estilo Servicio_Correo_*
+# Usamos un backend propio para manejar TLS/certificados en Windows.
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='JyGDreams.email_backend.EmailBackend')
+EMAIL_HOST = config('Servicio_Correo_host', default='smtp.gmail.com')
+EMAIL_PORT = config('Servicio_Correo_puerto', default=587, cast=int)
+EMAIL_HOST_USER = config('Servicio_Correo_correo', default='')
+EMAIL_HOST_PASSWORD = config('Servicio_Correo_clave', default='')
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+DEFAULT_FROM_EMAIL = config('Servicio_Correo_alias', default='JyGDreams.com')
+# Controla verificación de TLS (True recomendado). Pero puede fallar en Windows si hay CA no válidos.
+EMAIL_TLS_VERIFY = config('Servicio_Correo_verificar_ssl', default=False, cast=bool)
+# No establecemos EMAIL_SSL_CERTFILE; Django lo usa solo para client certs.
+# Para verificación TLS se usa el store de certificados del sistema.
+
+# Site URL for absolute URLs in emails
+SITE_URL = config('SITE_URL', default='http://localhost:8000')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

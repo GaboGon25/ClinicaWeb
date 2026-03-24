@@ -1,0 +1,95 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block title %}Editar Usuario - JyGDreams{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 900px;">
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+    <h2 class="m-0" style="color:#2c3e50;">
+      <i class="bi bi-pencil-square text-primary me-2"></i>Editar usuario interno
+    </h2>
+    <a href="{% url 'lista_usuarios' %}" class="btn btn-outline-success">
+      <i class="bi bi-arrow-left"></i> Volver
+    </a>
+  </div>
+
+  <div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body p-4 p-md-5">
+      <p class="text-muted mb-4">
+        Modifica los datos del usuario. La contraseña es opcional: si no la cambias, permanece igual.
+      </p>
+
+      <form method="post" class="row g-3">
+        {% csrf_token %}
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Forma de acceso</label>
+          <input name="username" class="form-control" required placeholder="Ej: secretaria1" value="{{ usuario.username }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Rol</label>
+          <select name="role" class="form-select" required>
+            <option value="" disabled>Selecciona un rol</option>
+            {% for r in roles %}
+              <option value="{{ r.id }}" {% if usuario.groups.first and usuario.groups.first.id == r.id %}selected{% endif %}>{{ r.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Nombre</label>
+          <input name="first_name" class="form-control" placeholder="Ej: Ana" value="{{ usuario.first_name }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Apellido</label>
+          <input name="last_name" class="form-control" placeholder="Ej: Pérez" value="{{ usuario.last_name }}">
+        </div>
+
+        <div class="col-12">
+          <label class="form-label fw-semibold">Correo</label>
+          <input name="email" type="email" class="form-control" placeholder="correo@ejemplo.com" value="{{ usuario.email }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Contraseña (opcional)</label>
+          <input name="password1" type="password" class="form-control" placeholder="Nueva contraseña">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Repetir contraseña</label>
+          <input name="password2" type="password" class="form-control" placeholder="Repite la contraseña">
+        </div>
+
+        <div class="col-12 d-grid mt-3">
+          <button class="btn btn-primary btn-lg rounded-pill">
+            <i class="bi bi-save me-2"></i>Guardar cambios
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% if messages %}
+  {% for message in messages %}
+    <script>
+      Swal.fire({
+        icon: '{{ message.tags }}',
+        title: '{{ message|escapejs }}',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 4000
+      });
+    </script>
+  {% endfor %}
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'JyGDreams/validando_agregarpc.js' %}"></script>
+{% endblock %}

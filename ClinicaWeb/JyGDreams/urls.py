@@ -4,9 +4,14 @@ from . import views
 
 urlpatterns = [
     #path('', views.index, name='index'),
-    path('', views.login_view, name='login'),  # Ahora la raiz es el login para que se muestre primero
+    path('', views.home_view, name='home_view'),
+    path('login/', views.login_view, name='login'),  # Ahora la raiz es el login para que se muestre primero
     path('index/', views.index, name='index'),  # ojo aca
+    path('recuperar/', views.password_reset_request, name='password_reset_request'),
+    path('recuperar/confirmar/', views.password_reset_confirm, name='password_reset_confirm'),
+    path('perfil/', views.mi_perfil, name='mi_perfil'),
     path("logout", views.logout_view, name="logout"),
+    path("usuarios/crear/", views.crear_usuario, name="crear_usuario"),
     path('agregar_paciente/', views.agregar_paciente, name='agregar_paciente'),
     path('tabla_paciente/', views.lista_pacientes, name='tabla_paciente'),
     path('editar_paciente/<int:paciente_id>/', views.editar_paciente, name='editar_paciente'),
@@ -26,10 +31,13 @@ urlpatterns = [
     path('cita/<int:cita_id>/pago/', views.agregar_pago, name='agregar_pago'),
     path('editar_pago/<int:cita_id>/', views.editar_pago, name='editar_pago'),
     path('detalle_pago/<int:cita_id>/', views.detalle_pago, name='detalle_pago'),
+    path('mis-citas/', views.mis_citas, name='mis_citas'),
     path('ajax/sugerencias-pacientes/', views.ajax_sugerencias_pacientes, name='ajax_sugerencias_pacientes'),
     path('ajax/filtrar-pacientes/', views.ajax_filtrar_pacientes, name='ajax_filtrar_pacientes'),
     path('estadisticas/', views.estadisticas, name='estadisticas'),
     path('paciente/<int:paciente_id>/pdf-citas/', views.generar_pdf_citas, name='generar_pdf_citas'),
     path('expediente/<int:expediente_id>/pdf/', views.generar_pdf_expediente, name='generar_pdf_expediente'),
     path('calendario/', views.calendario_citas, name='calendario_citas'),
+    path('usuarios/', views.lista_usuarios, name='lista_usuarios'),
+    path('usuarios/<int:user_id>/editar/', views.editar_usuario, name='editar_usuario'),
 ]

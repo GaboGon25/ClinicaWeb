@@ -1,0 +1,182 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block title %}Gestionar Usuarios - JyGDreams{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'JyGDreams/tabla_patient.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h2 class="text-center mb-5 title"><i class="bi bi-people-fill me-2"></i>Gestionar Usuarios</h2>
+
+  <!-- Barra de búsqueda -->
+  <form method="get" class="mb-4 p-4 rounded shadow-sm search-bar-custom" autocomplete="off" style="max-width:900px; margin:auto;">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-8">
+        <label for="busquedaUsuario" class="form-label mb-1 fw-semibold" style="color:#2c3e50;">Buscar por usuario, nombre o apellido</label>
+        <div class="input-group">
+          <span class="input-group-text search-icon-bg"><i class="bi bi-search"></i></span>
+          <input type="text" name="q" id="busquedaUsuario" class="form-control border-emerald" placeholder="Usuario, nombre o apellido" value="{{ query }}">
+        </div>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-outline-emerald w-100">
+          <i class="bi bi-search me-1"></i> Buscar
+        </button>
+      </div>
+      <div class="col-md-2">
+        <a href="{% url 'lista_usuarios' %}" class="btn btn-outline-emerald w-100">
+          <i class="bi bi-arrow-clockwise me-1"></i> Limpiar
+        </a>
+      </div>
+    </div>
+  </form>
+
+  <!-- Botón agregar usuario -->
+  <div class="text-center mb-4">
+    <a href="{% url 'crear_usuario' %}" class="btn btn-outline-emerald btn-lg">
+      <i class="bi bi-plus-circle me-2"></i>Crear Usuario
+    </a>
+  </div>
+
+  <!-- Tabla de usuarios -->
+  <div class="tabla-contenedor">
+    <table class="tabla-pacientes table table-hover align-middle shadow-sm rounded-4 overflow-hidden">
+      <thead class="bg-gradient" style="background: linear-gradient(90deg, #a3e4d7 0%, #2ecc71 100%); box-shadow: 0 2px 8px rgba(44,62,80,0.08);">
+        <tr>
+          <th class="text-center py-3 rounded-start-4"><i class="bi bi-person fs-5 me-2"></i>Usuario</th>
+          <th class="text-center py-3"><i class="bi bi-person fs-5 me-2"></i>Nombre</th>
+          <th class="text-center py-3"><i class="bi bi-envelope fs-5 me-2"></i>Email</th>
+          <th class="text-center py-3"><i class="bi bi-shield fs-5 me-2"></i>Rol</th>
+          <th class="text-center py-3"><i class="bi bi-toggle-on fs-5 me-2"></i>Estado</th>
+          <th class="text-center py-3 rounded-end-4"><i class="bi bi-three-dots-vertical fs-5"></i>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for usuario in usuarios %}
+        <tr class="bg-white bg-opacity-75 border-bottom">
+          <td class="text-center fw-semibold">{{ usuario.username }}</td>
+          <td class="text-center">{{ usuario.first_name }} {{ usuario.last_name }}</td>
+          <td class="text-center">{{ usuario.email|default:"Sin email" }}</td>
+          <td class="text-center">
+            {% for group in usuario.groups.all %}
+              {{ group.name }}
+            {% endfor %}
+          </td>
+          <td class="text-center">
+            {% if usuario.is_active %}
+              <span class="badge bg-success">Activo</span>
+            {% else %}
+              <span class="badge bg-danger">Inactivo</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            <div class="dropdown">
+              <button class="btn btn-link text-dark p-0" type="button" id="dropdownMenuButton{{ usuario.id }}" data-bs-toggle="dropdown" aria-expanded="false" data-bs-boundary="viewport" style="text-decoration: none;">
+                <i class="bi bi-three-dots-vertical fs-4"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton{{ usuario.id }}" data-bs-popper="static">
+                {% if usuario.is_active %}
+                  <li>
+                    <form method="post" style="display: inline;">
+                      {% csrf_token %}
+                      <input type="hidden" name="user_id" value="{{ usuario.id }}">
+                      <input type="hidden" name="action" value="deactivate">
+                      <button type="submit" class="dropdown-item text-danger">
+                        <i class="bi bi-x-circle me-2"></i>Desactivar
+                      </button>
+                    </form>
+                  </li>
+                {% else %}
+                  <li>
+                    <form method="post" style="display: inline;">
+                      {% csrf_token %}
+                      <input type="hidden" name="user_id" value="{{ usuario.id }}">
+                      <input type="hidden" name="action" value="activate">
+                      <button type="submit" class="dropdown-item text-success">
+                        <i class="bi bi-check-circle me-2"></i>Activar
+                      </button>
+                    </form>
+                  </li>
+                {% endif %}
+                <li>
+                  <a href="{% url 'editar_usuario' usuario.id %}" class="dropdown-item text-primary">
+                    <i class="bi bi-pencil-square me-2"></i>Editar
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center texto-vacio">
+            <i class="bi bi-inbox me-2"></i>No hay usuarios registrados.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paginación -->
+  {% if page_obj.has_other_pages %}
+  <nav aria-label="Paginación de usuarios" class="mt-4">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">
+          <i class="bi bi-chevron-left"></i> Anterior
+        </a>
+      </li>
+      {% else %}
+      <li class="page-item disabled">
+        <span class="page-link"><i class="bi bi-chevron-left"></i> Anterior</span>
+      </li>
+      {% endif %}
+
+      {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <li class="page-item active">
+          <span class="page-link">{{ num }}</span>
+        </li>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a>
+        </li>
+        {% endif %}
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">
+          Siguiente <i class="bi bi-chevron-right"></i>
+        </a>
+      </li>
+      {% else %}
+      <li class="page-item disabled">
+        <span class="page-link">Siguiente <i class="bi bi-chevron-right"></i></span>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% if messages %}
+  {% for message in messages %}
+    <script>
+      Swal.fire({
+        icon: '{{ message.tags }}',
+        title: '{{ message|escapejs }}',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 4000
+      });
+    </script>
+  {% endfor %}
+{% endif %}
+{% endblock %}

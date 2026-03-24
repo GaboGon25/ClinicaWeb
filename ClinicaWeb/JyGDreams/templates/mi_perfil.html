@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block title %}Mi Perfil - JyGDreams{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 800px;">
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+    <h2 class="m-0" style="color:#2c3e50;">
+      <i class="bi bi-person-circle text-success me-2"></i>Mi perfil
+    </h2>
+  </div>
+
+  <div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body p-4 p-md-5">
+      <form method="post" class="row g-3">
+        {% csrf_token %}
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Usuario</label>
+          <input class="form-control" value="{{ user_obj.username }}" disabled>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Correo</label>
+          <input name="email" type="email" class="form-control" value="{{ user_obj.email }}" placeholder="correo@ejemplo.com">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Nombre</label>
+          <input name="first_name" class="form-control" value="{{ user_obj.first_name }}" placeholder="Nombre">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Apellido</label>
+          <input name="last_name" class="form-control" value="{{ user_obj.last_name }}" placeholder="Apellido">
+        </div>
+
+        <div class="col-12">
+          <hr>
+          <p class="text-muted mb-2">
+            Si deseas cambiar tu contraseña, compléta ambos campos. Si los dejas vacíos, la contraseña no se modifica.
+          </p>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Nueva contraseña</label>
+          <input name="password1" type="password" class="form-control" placeholder="Nueva contraseña (opcional)">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Repetir nueva contraseña</label>
+          <input name="password2" type="password" class="form-control" placeholder="Repite la contraseña">
+        </div>
+
+        <div class="col-12 d-grid mt-3">
+          <button class="btn btn-success btn-lg rounded-pill">
+            <i class="bi bi-check2-circle me-2"></i>Guardar cambios
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% if messages %}
+  {% for message in messages %}
+    <script>
+      Swal.fire({
+        icon: '{{ message.tags }}',
+        title: '{{ message|escapejs }}',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 4000
+      });
+    </script>
+  {% endfor %}
+{% endif %}
+{% endblock %}
+

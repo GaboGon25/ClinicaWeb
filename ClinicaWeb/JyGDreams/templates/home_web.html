@@ -1,0 +1,360 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Clínica Estetica J&GDreams</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+{% block extra_css %}<link rel="stylesheet" href="{% static 'JyGDreams/home_web.css' %}" />{% endblock %} 
+
+</head>
+
+
+<body>
+
+
+<!-- NAVBAR -->
+
+<nav class="navbar navbar-expand-lg navbar-light navbar-clinic fixed-top">
+
+<div class="container">
+
+<a class="navbar-brand d-flex align-items-center" href="#">
+
+<img src="/static/JyGDreams/img/icon-clinica.png" class="logo">
+
+<span class="brand-text">Clinica Estetica J&GDreams</span>
+
+</a>
+
+<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu">
+<span class="navbar-toggler-icon"></span>
+</button>
+
+
+<div class="collapse navbar-collapse" id="menu">
+
+<ul class="navbar-nav ms-auto align-items-center">
+
+<li class="nav-item">
+<a class="nav-link" href="#">Inicio</a>
+</li>
+
+<li class="nav-item">
+<a class="nav-link" href="#procedimientos">Procedimientos</a>
+</li>
+
+<li class="nav-item">
+<a class="nav-link" href="#nosotros">Nosotros</a>
+</li>
+
+<li class="nav-item">
+<a class="nav-link" href="#contacto">Contacto</a>
+</li>
+
+<li class="nav-item">
+<a class="nav-link" href="#ubicacion">Ubicación</a>
+</li>
+
+
+<!-- LOGIN DOCTOR -->
+
+<li class="nav-item ms-3">
+
+<a class="doctor-login" href="{% url 'login' %}">
+
+<i class="fa-solid fa-user-doctor"></i>
+
+</a>
+
+</li>
+
+</ul>
+
+</div>
+
+</div>
+
+</nav>
+
+
+
+<!-- HERO -->
+
+<section class="hero">
+
+<div class="container">
+
+<div class="row align-items-center">
+
+<div class="col-lg-6">
+
+<h1>Resalta tu belleza natural</h1>
+
+<p>
+Tratamientos faciales avanzados con tecnología moderna
+y especialistas certificados en estética.
+</p>
+
+<a href="#procedimientos" class="btn btn-clinic">
+Descubrir tratamientos
+</a>
+
+</div>
+
+<div class="col-lg-6 text-center">
+
+<img src="https://images.unsplash.com/photo-1570172619644-dfd03ed5d881"
+class="hero-img">
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+
+<!-- PROCEDIMIENTOS -->
+
+<section id="procedimientos" class="procedimientos">
+
+<div class="container">
+
+<h2 class="section-title text-center">Nuestros Procedimientos</h2>
+
+<div id="procedimientosCarousel" class="carousel slide mt-4" data-bs-ride="carousel">
+  <div class="carousel-inner">
+    <div class="carousel-item active">
+      <div class="procedimiento-card" style="background-image:url('https://a-ap.storyblok.com/f/3000428/705x405/00af6537e7/what_is_microneedling_header.webp');">
+        <div class="procedimiento-info">
+          <h5>Dermapen</h5>
+          <p>Microneedling que estimula la producción natural de colágeno y recupera la textura de la piel.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="carousel-item">
+      <div class="procedimiento-card" style="background-image:url('https://clinicacermar.es/wp-content/uploads/personas-acuden-a-tratamientos-de-blefaroplastia.webp');">
+        <div class="procedimiento-info">
+          <h5>Blefaroplastia No Quirúrgica</h5>
+          <p>Puntos de quemadura controladas para mejorar flacidez del párpado.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="carousel-item">
+      <div class="procedimiento-card" style="background-image:url('https://resizer.hoy.es/resizer/resizer.php?imagen=https%3A%2F%2Foferplan.hoy.es%2F%2Fimages%2Fsized%2Fimages%2F4%2F9%2F7%2F497PLAQUETAS-497x280.png&nuevoancho=655&nuevoalto=369&crop=1');">
+        <div class="procedimiento-info">
+          <h5>Bioestimulación Facial con Plasma</h5>
+          <p>Administración de plasma rico en plaquetas mediante microinyecciones.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="carousel-item">
+      <div class="procedimiento-card" style="background-image:url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYhtMYpmi10jah8GQGUuIr2oI7aUXhN8Spew&s');">
+        <div class="procedimiento-info">
+          <h5>Peeling Facial</h5>
+          <p>Sustancia química que exfolia la piel, mejora su textura y reduce manchas y líneas de expresión.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="carousel-item">
+      <div class="procedimiento-card" style="background-image:url('https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=1400&q=80');">
+        <div class="procedimiento-info">
+          <h5>Limpieza Facial Profunda</h5>
+          <p>Procedimiento para eliminar células muertas y suciedad de la piel.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="carousel-item">
+      <div class="procedimiento-card" style="background-image:url('https://clinicasrodriguezalacreu.com/wp-content/uploads/relleno-labios-acido-hialuronico-1030x579.jpg');">
+        <div class="procedimiento-info">
+          <h5>Relleno con Ácido Hialurónico</h5>
+          <p>Sustancia química que aporta volumen en área facial.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="carousel-item">
+      <div class="procedimiento-card" style="background-image:url('https://cdn.cuponidad.pe/images/Deals/Rellenoplasmagel-840.jpg');">
+        <div class="procedimiento-info">
+          <h5>Plasma Gel</h5>
+          <p>Relleno natural de los propios elementos de la sangre.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="carousel-item">
+      <div class="procedimiento-card" style="background-image:url('https://imagenartclinic.com/loginwp/wp-content/uploads/2022/06/electro.jpg');">
+        <div class="procedimiento-info">
+          <h5>Exéresis de Verrugas</h5>
+          <p>Extracción de una lesión de piel con lápiz láser.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="carousel-item">
+      <div class="procedimiento-card" style="background-image:url('https://ss-cnt-001c.esmsv.com/r/content/host1/95321fa531ffe7d3492b888800f625d9/editor/Hollywood-Laser-Peel-.webp');">
+        <div class="procedimiento-info">
+          <h5>Laser Hollywood Peel</h5>
+          <p>Rejuvenecimiento láser profesional para luminosidad inmediata y tono uniforme.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="carousel-item">
+      <div class="procedimiento-card" style="background-image:url('https://theskinboutique.com.au/cdn/shop/products/the-skin-boutique-the-hydrafacial-3-step-hydrafacial-single-624804.jpg?v=1745770366&width=1920');">
+        <div class="procedimiento-info">
+          <h5>Hydrafacial</h5>
+          <p>Limpieza profunda, hidratación y revitalización de la piel en una sola sesión.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="carousel-item">
+      <div class="procedimiento-card" style="background-image:url('https://gloriasantomauro.com/wp-content/uploads/2020/03/botox.jpg');">
+        <div class="procedimiento-info">
+          <h5>Botox</h5>
+          <p>Reducción de arrugas y líneas de expresión con resultados naturales y duraderos.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="carousel-control-prev" type="button" data-bs-target="#procedimientosCarousel" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Anterior</span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#procedimientosCarousel" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Siguiente</span>
+  </button>
+</div>
+
+</div>
+
+</section>
+
+
+<!-- MISION VISION -->
+
+<section id="nosotros" class="mision-vision">
+
+<div class="overlay">
+
+<div class="container text-center text-white">
+
+<h2 class="mb-5">Nuestra Clínica</h2>
+
+<div class="row">
+
+<div class="col-md-6">
+
+<div class="info-box">
+
+<h3>Misión</h3>
+
+<p>
+Brindar tratamientos estéticos faciales seguros y de alta calidad,
+utilizando tecnología moderna
+para mejorar la confianza y bienestar de nuestros pacientes.
+</p>
+
+</div>
+
+</div>
+
+<div class="col-md-6">
+
+<div class="info-box">
+
+<h3>Visión</h3>
+
+<p>
+Ser una clínica estética líder en innovación y resultados
+naturales, reconocida por la excelencia en el cuidado
+y la satisfacción de nuestros pacientes.
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+
+<!-- CONTACTO -->
+
+<section id="contacto">
+
+<div class="container text-center">
+
+<h2 class="section-title">Agenda tu consulta</h2>
+
+<p>Contáctanos para recibir asesoría personalizada.</p>
+
+<a href="https://wa.me/50558194906" class="btn btn-success btn-lg">
+Contactar por WhatsApp
+</a>
+
+</div>
+
+</section>
+
+<!-- UBICACIÓN -->
+
+<section id="ubicacion" class="ubicacion">
+  <div class="container text-center">
+    <h2 class="section-title">Dónde estamos</h2>
+    <p>Visítanos en nuestro centro de estética. ¡Te esperamos!</p>
+    <div class="ratio ratio-16x9 mt-3">
+      <iframe src="https://www.google.com/maps?q=12.143144589583923, -86.22898274470155+(Bello+Horizonte,+Managua+11144)&z=16&output=embed" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+    <p><strong>Dirección:</strong> Bello Horizonte, De la taquiza 4c al sur, Contiguo a Clínica del pie</p>
+  </div>
+</section>
+
+
+
+
+
+<footer>
+
+<p>© 2026 Clínica Estetica J&GDreams</p>
+
+</footer>
+
+
+
+<a href="https://wa.me/50558194906" class="whatsapp">
+<i class="fa-brands fa-whatsapp"></i>
+</a>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

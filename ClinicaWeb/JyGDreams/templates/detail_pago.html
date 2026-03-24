@@ -77,9 +77,11 @@
     </div>
 
     <div class="d-grid mt-4">
+      {% if perms.JyGDreams.change_pago %}
       <a href="{% url 'editar_pago' cita.id %}" class="btn btn-warning">
         <i class="bi bi-pencil-square"></i> Editar Pago
       </a>
+      {% endif %}
     </div>
   </div>
 </div>

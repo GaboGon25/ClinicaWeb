@@ -36,9 +36,11 @@
 
   <!-- Botón agregar paciente -->
   <div class="text-center mb-4">
+    {% if perms.JyGDreams.add_paciente %}
     <a href="{% url 'agregar_paciente' %}" class="btn btn-outline-emerald btn-lg">
       <i class="bi bi-plus-circle me-2"></i>Agregar Paciente
     </a>
+    {% endif %}
   </div>
 
   <!-- Tabla de pacientes -->
@@ -78,9 +80,15 @@
                   </a>
                 </li>
                 <li>
-                  <a class="dropdown-item" href="{% url 'editar_paciente' paciente.id %}">
-                    <i class="bi bi-pencil-square me-2"></i>Editar Paciente
-                  </a>
+                  {% if perms.JyGDreams.change_paciente %}
+                    <a class="dropdown-item" href="{% url 'editar_paciente' paciente.id %}">
+                      <i class="bi bi-pencil-square me-2"></i>Editar Paciente
+                    </a>
+                  {% else %}
+                    <button class="dropdown-item" disabled>
+                      <i class="bi bi-pencil-square me-2"></i>Editar Paciente
+                    </button>
+                  {% endif %}
                 </li>
               </ul>
             </div>

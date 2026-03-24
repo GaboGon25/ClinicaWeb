@@ -40,6 +40,24 @@
         </div>
       </div>
 
+      <div class="row mb-4">
+        <div class="col-md-12">
+          <label class="form-label">Doctor asignado</label>
+          <select class="form-select" name="doctor" required>
+            <option value="" disabled {% if not cita.doctor_id %}selected{% endif %}>Seleccione un doctor</option>
+            {% for d in doctores %}
+              <option value="{{ d.id }}" {% if cita.doctor_id == d.id %}selected{% endif %}>
+                {% if d.first_name or d.last_name %}
+                  {{ d.first_name }} {{ d.last_name }}
+                {% else %}
+                  {{ d.username }}
+                {% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
       <div class="form-check mb-3">
         <input class="form-check-input" type="checkbox" id="agregarOtroProcedimiento" name="agregar_otro" {% if proc2 %}checked{% endif %}>
         <label class="form-check-label" for="agregarOtroProcedimiento">

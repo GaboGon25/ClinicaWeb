@@ -1,12 +1,17 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.http import JsonResponse
-from .models import Paciente, Cita, Procedimiento, CitaProcedimiento, Pago, Expediente, BiotipoCutaneo, CuidadoPiel, Habito, ExpedienteBiotipo, ExpedienteCuidadoPiel
+from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
+from django.contrib.auth.models import User, Group
+from django.contrib.auth.password_validation import validate_password
+from .models import Paciente, Cita, Procedimiento, CitaProcedimiento, Pago, Expediente, BiotipoCutaneo, CuidadoPiel, Habito, ExpedienteBiotipo, ExpedienteCuidadoPiel, PasswordResetCode
 from django.utils import timezone
 from django.forms import modelformset_factory
+from django.db import models
 from django.db.models import Q, Exists, OuterRef, Subquery, Sum, Count, F
 from django.core.paginator import Paginator
 from reportlab.lib.pagesizes import letter, A4
@@ -15,12 +20,22 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 from io import BytesIO
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 import os
 from django.conf import settings
 import json
+import secrets
+from django.core.mail import EmailMultiAlternatives
 from django.core.exceptions import ValidationError
+
+def home_view(request):
+    return render(request, 'home_web.html')
+
+def _has_perms(*perms):
+    def check(user):
+        return user.is_authenticated and user.has_perms(perms)
+    return user_passes_test(check, login_url="login")
 
 #def login(request):
     #return render(request, 'login.html')
@@ -37,9 +52,254 @@ def login_view(request):
             messages.error(request, 'Usuario o contraseña incorrectos')
     return render(request, 'login.html')
 
+@login_required(login_url="login")
 def index(request):
     return render(request, 'index.html')
 
+
+def password_reset_request(request):
+    if request.method == "POST":
+        username = (request.POST.get("username") or "").strip()
+        if not username:
+            messages.error(request, "Ingresa tu usuario.")
+            return render(request, "password_reset_request.html")
+
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            messages.success(request, "Si el usuario existe y tiene correo registrado, se ha enviado una clave temporal.")
+            return redirect("login")
+
+        if not user.is_active:
+            messages.error(request, "Tu cuenta está inactiva. Contacta al administrador.")
+            return redirect("login")
+
+        if not user.email:
+            messages.error(request, "El usuario no tiene un correo registrado en su perfil.")
+            return render(request, "password_reset_request.html")
+
+        code = secrets.token_urlsafe(8)
+        expires_at = timezone.now() + timedelta(minutes=15)
+        PasswordResetCode.objects.create(user=user, code=code, expires_at=expires_at)
+
+        # Establece la contraseña temporal para que el usuario pueda iniciar sesión
+        # con esta clave y luego cambiarla en el flujo de recuperación.
+        user.set_password(code)
+        user.save(update_fields=["password"])
+
+        reset_url = request.build_absolute_uri(reverse("password_reset_confirm")) + f"?code={code}"
+
+        context = {
+            "user": user,
+            "code": code,
+            "expires_minutes": 15,
+            "reset_url": reset_url,
+            "clinic_name": "Clínica Estética JyGDreams",
+            "logo_url": request.build_absolute_uri(
+                settings.STATIC_URL + "JyGDreams/img/icon-clinica.png"
+            ),
+        }
+        html_body = render_to_string("email_password_reset.html", context)
+
+        subject = "Recuperación de contraseña - JyGDreams"
+        from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@example.com")
+        to = [user.email]
+
+        msg = EmailMultiAlternatives(subject, "", from_email, to)
+        msg.attach_alternative(html_body, "text/html")
+        try:
+            msg.send()
+            messages.success(request, "Si el usuario existe y tiene correo registrado, se ha enviado una clave temporal.")
+        except Exception as e:
+            messages.error(request, f"Error al enviar el email: {str(e)}")
+        return redirect("login")
+
+    return render(request, "password_reset_request.html")
+
+
+def password_reset_confirm(request):
+    if request.method == "POST":
+        code = (request.POST.get("code") or "").strip()
+        password1 = request.POST.get("password1") or ""
+        password2 = request.POST.get("password2") or ""
+
+        if not code:
+            messages.error(request, "Ingresa la clave temporal.")
+            return render(request, "password_reset_confirm.html")
+
+        try:
+            reset = PasswordResetCode.objects.select_related("user").get(code=code, used=False)
+        except PasswordResetCode.DoesNotExist:
+            messages.error(request, "Clave temporal inválida o ya usada.")
+            return render(request, "password_reset_confirm.html")
+
+        if not reset.is_valid():
+            messages.error(request, "La clave temporal ha expirado. Solicita una nueva.")
+            return render(request, "password_reset_confirm.html")
+
+        if password1 != password2:
+            messages.error(request, "Las contraseñas no coinciden.")
+            return render(request, "password_reset_confirm.html", {"code": code})
+
+        try:
+            validate_password(password1, user=reset.user)
+        except Exception as e:
+            msg = getattr(e, "messages", None)
+            messages.error(request, msg[0] if msg else "La contraseña no cumple los requisitos.")
+            return render(request, "password_reset_confirm.html", {"code": code})
+
+        user = reset.user
+        user.set_password(password1)
+        user.save()
+
+        reset.used = True
+        reset.save()
+
+        messages.success(request, "Tu contraseña ha sido actualizada. Ahora puedes iniciar sesión.")
+        return redirect("login")
+
+    code = request.GET.get("code", "")
+    return render(request, "password_reset_confirm.html", {"code": code})
+
+
+@login_required(login_url="login")
+def mi_perfil(request):
+    user = request.user
+    if request.method == "POST":
+        first_name = (request.POST.get("first_name") or "").strip()
+        last_name = (request.POST.get("last_name") or "").strip()
+        email = (request.POST.get("email") or "").strip()
+        password1 = request.POST.get("password1") or ""
+        password2 = request.POST.get("password2") or ""
+
+        user.first_name = first_name
+        user.last_name = last_name
+        user.email = email
+
+        if password1 or password2:
+            if password1 != password2:
+                messages.error(request, "Las contraseñas no coinciden.")
+                return render(request, "mi_perfil.html", {"user_obj": user})
+            try:
+                validate_password(password1, user=user)
+            except Exception as e:
+                msg = getattr(e, "messages", None)
+                messages.error(request, msg[0] if msg else "La contraseña no cumple los requisitos.")
+                return render(request, "mi_perfil.html", {"user_obj": user})
+            user.set_password(password1)
+            user.save()
+            # Reautenticar después de cambiar contraseña
+            login(request, user)
+            messages.success(request, "Perfil y contraseña actualizados correctamente.")
+            return redirect("mi_perfil")
+
+        user.save()
+        messages.success(request, "Perfil actualizado correctamente.")
+        return redirect("mi_perfil")
+
+    return render(request, "mi_perfil.html", {"user_obj": user})
+
+@user_passes_test(lambda u: u.is_authenticated and u.is_superuser, login_url="login")
+def crear_usuario(request):
+    roles = Group.objects.filter(name__in=["Doctores", "Secretarias"]).order_by("name")
+    if request.method == "POST":
+        username = (request.POST.get("username") or "").strip()
+        first_name = (request.POST.get("first_name") or "").strip()
+        last_name = (request.POST.get("last_name") or "").strip()
+        email = (request.POST.get("email") or "").strip()
+        role_id = request.POST.get("role")
+        password1 = request.POST.get("password1") or ""
+        password2 = request.POST.get("password2") or ""
+
+        if not username:
+            messages.error(request, "El usuario es obligatorio.")
+            return render(request, "create_user.html", {"roles": roles})
+
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Ese usuario ya existe.")
+            return render(request, "create_user.html", {"roles": roles})
+
+        if password1 != password2:
+            messages.error(request, "Las contraseñas no coinciden.")
+            return render(request, "create_user.html", {"roles": roles})
+
+        try:
+            validate_password(password1)
+        except Exception as e:
+            # e puede ser ValidationError con lista de mensajes
+            msg = getattr(e, "messages", None)
+            messages.error(request, msg[0] if msg else "La contraseña no cumple los requisitos.")
+            return render(request, "create_user.html", {"roles": roles})
+
+        role = roles.filter(id=role_id).first()
+        if not role:
+            messages.error(request, "Selecciona un rol válido (Doctor o Secretaria).")
+            return render(request, "create_user.html", {"roles": roles})
+
+        user = User.objects.create_user(
+            username=username,
+            password=password1,
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+        )
+        user.groups.add(role)
+        messages.success(request, f"Usuario '{username}' creado y asignado a {role.name}.")
+        return redirect("index")
+
+    return render(request, "create_user.html", {"roles": roles})
+
+@user_passes_test(lambda u: u.is_superuser, login_url="login")
+def editar_usuario(request, user_id):
+    usuario = get_object_or_404(User, id=user_id)
+    roles = Group.objects.filter(name__in=["Doctores", "Secretarias"]).order_by("name")
+
+    if request.method == "POST":
+        username = (request.POST.get("username") or "").strip()
+        first_name = (request.POST.get("first_name") or "").strip()
+        last_name = (request.POST.get("last_name") or "").strip()
+        email = (request.POST.get("email") or "").strip()
+        role_id = request.POST.get("role")
+        password1 = request.POST.get("password1") or ""
+        password2 = request.POST.get("password2") or ""
+
+        if not username:
+            messages.error(request, "El usuario es obligatorio.")
+            return render(request, "edit_user.html", {"usuario": usuario, "roles": roles})
+
+        if User.objects.filter(username=username).exclude(id=usuario.id).exists():
+            messages.error(request, "Ese usuario ya existe.")
+            return render(request, "edit_user.html", {"usuario": usuario, "roles": roles})
+
+        if password1 or password2:
+            if password1 != password2:
+                messages.error(request, "Las contraseñas no coinciden.")
+                return render(request, "edit_user.html", {"usuario": usuario, "roles": roles})
+            try:
+                validate_password(password1, user=usuario)
+            except Exception as e:
+                msg = getattr(e, "messages", None)
+                messages.error(request, msg[0] if msg else "La contraseña no cumple los requisitos.")
+                return render(request, "edit_user.html", {"usuario": usuario, "roles": roles})
+            usuario.set_password(password1)
+
+        usuario.username = username
+        usuario.first_name = first_name
+        usuario.last_name = last_name
+        usuario.email = email
+
+        role = roles.filter(id=role_id).first()
+        if role:
+            usuario.groups.clear()
+            usuario.groups.add(role)
+
+        usuario.save()
+        messages.success(request, f"Usuario '{usuario.username}' actualizado correctamente.")
+        return redirect("lista_usuarios")
+
+    return render(request, "edit_user.html", {"usuario": usuario, "roles": roles})
+
+@login_required(login_url="login")
 def logout_view(request):
     from django.contrib.auth import logout
     logout(request)
@@ -47,6 +307,7 @@ def logout_view(request):
     return redirect('login')  # Redirige al login después de cerrar sesión
 
 
+@permission_required("JyGDreams.add_paciente", raise_exception=True)
 def agregar_paciente(request):
     if request.method == "POST":
         nombre = request.POST['nombre']
@@ -77,10 +338,12 @@ def agregar_paciente(request):
         return redirect('tabla_paciente')
     return render(request, 'add_patient.html')
 
+@permission_required("JyGDreams.view_paciente", raise_exception=True)
 def tabla_paciente(request):
     pacientes = Paciente.objects.all()
     return render(request, 'tabla_patient.html', {'pacientes': pacientes})
 
+@permission_required("JyGDreams.change_paciente", raise_exception=True)
 def editar_paciente(request, paciente_id):
     paciente = get_object_or_404(Paciente, id=paciente_id)
 
@@ -101,6 +364,7 @@ def editar_paciente(request, paciente_id):
         return redirect('tabla_paciente')
     return render(request, 'edit_patient.html', {'paciente': paciente})
 
+@permission_required("JyGDreams.view_expediente", raise_exception=True)
 def expediente_pacientes(request):
     query = request.GET.get('q', '')
     tiene_expediente = request.GET.get('tiene_expediente', '')
@@ -141,6 +405,7 @@ def expediente_pacientes(request):
         'tiene_expediente': tiene_expediente,
     })
 
+@permission_required("JyGDreams.add_expediente", raise_exception=True)
 def agregar_expediente(request, paciente_id):
     paciente = get_object_or_404(Paciente, id=paciente_id)
     biotipos = BiotipoCutaneo.objects.all()
@@ -202,6 +467,7 @@ def agregar_expediente(request, paciente_id):
         'cuidados': cuidados,
     })
 
+@permission_required("JyGDreams.view_expediente", raise_exception=True)
 def detalle_expediente(request, expediente_id):
     expediente = get_object_or_404(Expediente, id=expediente_id)
     habito = Habito.objects.filter(expediente=expediente).first()
@@ -245,6 +511,7 @@ def detalle_expediente(request, expediente_id):
         'total_general': total_general,
     })
 
+@permission_required("JyGDreams.change_expediente", raise_exception=True)
 def editar_expediente(request, expediente_id):
     expediente = get_object_or_404(Expediente, id=expediente_id)
     paciente = expediente.paciente
@@ -333,6 +600,7 @@ def editar_expediente(request, expediente_id):
     })
 
 
+@permission_required("JyGDreams.view_expediente", raise_exception=True)
 def seleccionar_exp(request, paciente_id):
     paciente = get_object_or_404(Paciente, id=paciente_id)
     expediente = Expediente.objects.filter(paciente=paciente).first()
@@ -341,12 +609,24 @@ def seleccionar_exp(request, paciente_id):
     else:
         return redirect('agregar_expediente', paciente_id=paciente.id)
 
+@permission_required("JyGDreams.view_cita", raise_exception=True)
 def cita_pacientes(request):
     query = request.GET.get('q', '')
     fecha = request.GET.get('fecha', '')
     orden = request.GET.get('orden', '')
 
     pacientes = Paciente.objects.all()
+
+    # Filtrar por doctor si es doctor y no superuser
+    if request.user.groups.filter(name="Doctores").exists() and not request.user.is_superuser:
+        pacientes = pacientes.filter(
+            Exists(
+                Cita.objects.filter(
+                    paciente=OuterRef('pk'),
+                    doctor=request.user
+                )
+            )
+        )
 
     if query:
         pacientes = pacientes.filter(
@@ -392,6 +672,8 @@ def cita_pacientes(request):
 
     # --- Eventos para el calendario ---
     citas = Cita.objects.select_related('paciente').filter(estado__in=['AGENDADO', 'REPROGRAMADO'])
+    if request.user.groups.filter(name="Doctores").exists() and not request.user.is_superuser:
+        citas = citas.filter(doctor=request.user)
     eventos = []
     for cita in citas:
         procedimientos = ", ".join([p.titulo for p in cita.procedimientos.all()])
@@ -416,10 +698,12 @@ def cita_pacientes(request):
     #return render(request, 'home_citas.html')
 
 
+@permission_required("JyGDreams.change_cita", raise_exception=True)
 def editar_cita(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id)
     procedimientos = Procedimiento.objects.all()
     procedimientos_dict = {p.id: float(p.costo) for p in procedimientos}
+    doctores = User.objects.filter(groups__name="Doctores", is_active=True).order_by("first_name", "last_name", "username").distinct()
 
     # Obtener los procedimientos actuales de la cita
     procedimientos_actuales = list(cita.procedimientos.values_list('id', flat=True))
@@ -429,6 +713,7 @@ def editar_cita(request, cita_id):
         hora_nueva = request.POST['hora']
         motivo = request.POST['motivo']
         estado = request.POST['estado']
+        doctor_id = request.POST.get('doctor')
 
         procedimiento1_id = request.POST.get('procedimiento1')
         procedimiento2_id = request.POST.get('procedimiento2') if request.POST.get('agregar_otro') else None
@@ -441,6 +726,7 @@ def editar_cita(request, cita_id):
         cita.hora = hora_nueva
         cita.motivo_cita = motivo
         cita.estado = estado
+        cita.doctor_id = doctor_id or None
         try:
             cita.full_clean()
             cita.save()
@@ -463,6 +749,7 @@ def editar_cita(request, cita_id):
                 'procedimientos_dict': procedimientos_dict,
                 'proc1': proc1,
                 'proc2': proc2,
+                'doctores': doctores,
             })
 
     # Para prellenar el formulario
@@ -475,28 +762,40 @@ def editar_cita(request, cita_id):
         'procedimientos_dict': procedimientos_dict,
         'proc1': proc1,
         'proc2': proc2,
+        'doctores': doctores,
     })
 
+@permission_required("JyGDreams.view_cita", raise_exception=True)
 def detalle_cita(request , cita_id):
     cita = get_object_or_404(Cita, id=cita_id)
-    return render(request, 'detail_cita.html', {'cita': cita})
+    is_doctor = request.user.groups.filter(name="Doctores").exists() and not request.user.is_superuser
+    return render(request, 'detail_cita.html', {'cita': cita, 'is_doctor': is_doctor})
 
 
+@permission_required("JyGDreams.add_cita", raise_exception=True)
 def agregar_cita(request, paciente_id):
     paciente = get_object_or_404(Paciente, id=paciente_id)
     procedimientos = Procedimiento.objects.all()
     procedimientos_dict = {p.id: float(p.costo) for p in procedimientos}
+    doctores = (
+        User.objects.filter(is_active=True)
+        .filter(models.Q(is_superuser=True) | models.Q(groups__name="Doctores"))
+        .order_by("first_name", "last_name", "username")
+        .distinct()
+    )
 
     if request.method == 'POST':
         fecha = request.POST['fecha']
         hora = request.POST['hora']
         motivo = request.POST['motivo']
         estado = request.POST['estado']
+        doctor_id = request.POST.get('doctor')
         procedimiento1_id = request.POST.get('procedimiento1')
         procedimiento2_id = request.POST.get('procedimiento2')
 
         cita = Cita(
             paciente=paciente,
+            doctor_id=doctor_id or None,
             fecha=fecha,
             hora=hora,
             motivo_cita=motivo,
@@ -516,18 +815,26 @@ def agregar_cita(request, paciente_id):
             return render(request, 'add_cita.html', {
                 'paciente': paciente,
                 'procedimientos': procedimientos,
-                'procedimientos_dict': procedimientos_dict
+                'procedimientos_dict': procedimientos_dict,
+                'doctores': doctores,
+                'doctor_id': doctor_id,
             })
 
     return render(request, 'add_cita.html', {
         'paciente': paciente,
         'procedimientos': procedimientos,
-        'procedimientos_dict': procedimientos_dict
+        'procedimientos_dict': procedimientos_dict,
+        'doctores': doctores,
     })
 
+@permission_required("JyGDreams.view_cita", raise_exception=True)
 def home_citas(request, paciente_id):
     paciente = get_object_or_404(Paciente, id=paciente_id)
     citas = Cita.objects.filter(paciente=paciente).order_by('-fecha', '-hora')
+    
+    # Filtrar por doctor si es doctor y no superuser
+    if request.user.groups.filter(name="Doctores").exists() and not request.user.is_superuser:
+        citas = citas.filter(doctor=request.user)
     
     # Obtener parámetro de filtro por estado
     estado = request.GET.get('estado', '')
@@ -541,14 +848,18 @@ def home_citas(request, paciente_id):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
+    is_doctor = request.user.groups.filter(name="Doctores").exists() and not request.user.is_superuser
+    
     return render(request, 'home_citas.html', {
         'paciente': paciente,
         'citas': page_obj.object_list,
         'page_obj': page_obj,
         'estado': estado,
+        'is_doctor': is_doctor,
     })
 
 
+@_has_perms("JyGDreams.add_pago", "JyGDreams.change_citaprocedimiento")
 def agregar_pago(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id)
     # Verifica si ya existe un pago para esta cita
@@ -616,6 +927,7 @@ def agregar_pago(request, cita_id):
         'monto_final': monto_final
     })
 
+@_has_perms("JyGDreams.change_pago", "JyGDreams.change_citaprocedimiento")
 def editar_pago(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id)
     cita_procedimientos = CitaProcedimiento.objects.filter(cita=cita)
@@ -667,6 +979,7 @@ def editar_pago(request, cita_id):
         'monto_final': monto_final,
     })
 
+@permission_required("JyGDreams.view_pago", raise_exception=True)
 def detalle_pago(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id)
     pago = Pago.objects.filter(cita=cita).first()
@@ -690,6 +1003,7 @@ def detalle_pago(request, cita_id):
         'paciente': paciente,
     })
     
+@permission_required("JyGDreams.view_paciente", raise_exception=True)
 def lista_pacientes(request):
     query = request.GET.get('q', '')
     pacientes = Paciente.objects.all()
@@ -702,6 +1016,7 @@ def lista_pacientes(request):
         'query': query,
     })
 
+@permission_required("JyGDreams.view_paciente", raise_exception=True)
 def ajax_sugerencias_pacientes(request):
     q = request.GET.get('q', '')
     sugerencias = Paciente.objects.filter(
@@ -710,6 +1025,7 @@ def ajax_sugerencias_pacientes(request):
     return JsonResponse(list(sugerencias), safe=False)
 
 
+@permission_required("JyGDreams.view_cita", raise_exception=True)
 def ajax_filtrar_pacientes(request):
     query = request.GET.get('q', '')
     fecha = request.GET.get('fecha', '')
@@ -776,6 +1092,7 @@ def ajax_filtrar_pacientes(request):
     return JsonResponse({'html': html})
 # Create your views here.
 
+@user_passes_test(lambda u: u.is_authenticated and u.is_superuser, login_url="login")
 def estadisticas(request):
     # Filtros de fechas
     fecha_inicio = request.GET.get('fecha_inicio')
@@ -846,6 +1163,7 @@ def estadisticas(request):
     }
     return render(request, 'dashboard.html', context)
 
+@permission_required("JyGDreams.view_cita", raise_exception=True)
 def generar_pdf_citas(request, paciente_id):
     paciente = get_object_or_404(Paciente, id=paciente_id)
     
@@ -989,6 +1307,7 @@ def generar_pdf_citas(request, paciente_id):
     response.write(pdf)
     return response
 
+@permission_required("JyGDreams.view_cita", raise_exception=True)
 def ajax_filtrar_citas(request, paciente_id):
     paciente = get_object_or_404(Paciente, id=paciente_id)
     citas = Cita.objects.filter(paciente=paciente).order_by('-fecha', '-hora')
@@ -1017,6 +1336,7 @@ def ajax_filtrar_citas(request, paciente_id):
     )
     return JsonResponse({'html': html})
 
+@permission_required("JyGDreams.view_expediente", raise_exception=True)
 def ajax_filtrar_expedientes(request):
     query = request.GET.get('q', '')
     tiene_expediente = request.GET.get('tiene_expediente', '')
@@ -1059,6 +1379,42 @@ def ajax_filtrar_expedientes(request):
     )
     return JsonResponse({'html': html})
 
+@user_passes_test(lambda u: u.is_superuser, login_url="login")
+def lista_usuarios(request):
+    query = request.GET.get('q', '')
+    usuarios = User.objects.filter(groups__name__in=['Doctores', 'Secretarias']).distinct()
+
+    if query:
+        usuarios = usuarios.filter(
+            Q(username__icontains=query) | Q(first_name__icontains=query) | Q(last_name__icontains=query)
+        )
+
+    # Paginación
+    paginator = Paginator(usuarios, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    if request.method == 'POST':
+        user_id = request.POST.get('user_id')
+        action = request.POST.get('action')
+        user = get_object_or_404(User, id=user_id)
+        if action == 'activate':
+            user.is_active = True
+            user.save()
+            messages.success(request, f'Usuario {user.username} activado.')
+        elif action == 'deactivate':
+            user.is_active = False
+            user.save()
+            messages.success(request, f'Usuario {user.username} desactivado.')
+        return redirect('lista_usuarios')
+
+    return render(request, 'tabla_usuarios.html', {
+        'usuarios': page_obj.object_list,
+        'page_obj': page_obj,
+        'query': query,
+    })
+
+@permission_required("JyGDreams.view_expediente", raise_exception=True)
 def generar_pdf_expediente(request, expediente_id):
     expediente = get_object_or_404(Expediente, id=expediente_id)
     paciente = expediente.paciente
@@ -1298,6 +1654,7 @@ def generar_pdf_expediente(request, expediente_id):
     response.write(pdf)
     return response
 
+@permission_required("JyGDreams.view_cita", raise_exception=True)
 def calendario_citas(request):
     citas = Cita.objects.select_related('paciente').filter(estado__in=['AGENDADO', 'REPROGRAMADO'])
     eventos = []
@@ -1310,3 +1667,24 @@ def calendario_citas(request):
         })
     eventos_json = json.dumps(eventos, ensure_ascii=False)
     return render(request, 'calendario_citas.html', {'eventos_json': eventos_json})
+
+
+def mis_citas(request):
+    if not request.user.is_authenticated:
+        return redirect("login")
+    if not (request.user.groups.filter(name="Doctores").exists() or request.user.is_superuser):
+        return redirect("index")
+    citas = Cita.objects.select_related("paciente").filter(
+        doctor=request.user,
+        estado__in=["AGENDADO", "REPROGRAMADO"],
+    )
+    eventos = []
+    for cita in citas:
+        procedimientos = ", ".join([p.titulo for p in cita.procedimientos.all()])
+        eventos.append({
+            "title": f"{cita.paciente.nombre} {cita.paciente.apellido} - {procedimientos}",
+            "start": f"{cita.fecha}T{cita.hora}",
+            "allDay": False,
+        })
+    eventos_json = json.dumps(eventos, ensure_ascii=False)
+    return render(request, "calendario_citas.html", {"eventos_json": eventos_json})

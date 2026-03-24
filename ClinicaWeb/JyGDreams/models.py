@@ -2,6 +2,8 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from decimal import Decimal
+from django.conf import settings
+from django.contrib.auth.models import User
 
 class Paciente(models.Model):
     nombre = models.CharField(max_length=100)
@@ -24,6 +26,13 @@ class Cita(models.Model):
     ]
     procedimientos = models.ManyToManyField('Procedimiento', through='CitaProcedimiento')
     paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE)
+    doctor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="citas_asignadas",
+    )
     fecha = models.DateField()
     hora = models.TimeField()
     motivo_cita = models.CharField(max_length=100)
@@ -32,6 +41,15 @@ class Cita(models.Model):
     def clean(self):
         if self.fecha < timezone.localdate():
             raise ValidationError("No se pueden programar citas para fechas pasadas.")
+        if self.doctor_id:
+            conflicto = (
+                Cita.objects.filter(doctor_id=self.doctor_id, fecha=self.fecha, hora=self.hora)
+                .exclude(pk=self.pk)
+                .exclude(estado__in=["REALIZADO", "INASISTENCIA"])
+                .exists()
+            )
+            if conflicto:
+                raise ValidationError("El doctor ya tiene una cita asignada en ese día y hora.")
 
     def __str__(self):
         return f"Cita de {self.paciente} el {self.fecha} a las {self.hora} ({self.get_estado_display()})" 
@@ -130,3 +148,17 @@ class ExpedienteCuidadoPiel(models.Model):
     expediente = models.ForeignKey(Expediente, on_delete=models.CASCADE)
     cuidado = models.ForeignKey(CuidadoPiel, on_delete=models.PROTECT)
     otro = models.CharField(max_length=100, blank=True)  # Para el campo "Otros"
+
+
+class PasswordResetCode(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reset_codes")
+    code = models.CharField(max_length=64)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    used = models.BooleanField(default=False)
+
+    def is_valid(self):
+        return (not self.used) and timezone.now() <= self.expires_at
+
+    def __str__(self):
+        return f"Reset code for {self.user.username}"

@@ -12,6 +12,7 @@
 
 <div class="cards-container">
     <!-- Pacientes -->
+    {% if perms.JyGDreams.view_paciente %}
     <div class="card card-action">
         <div class="card-body">
             <i class="bi bi-person-fill icon"></i>
@@ -20,8 +21,10 @@
             <a href="{% url 'tabla_paciente' %}" class="btn btn-emerald">Ir a Pacientes</a>
         </div>
     </div>
+    {% endif %}
 
     <!-- Expedientes -->
+    {% if perms.JyGDreams.view_expediente %}
     <div class="card card-action">
         <div class="card-body">
             <i class="bi bi-folder-fill icon"></i>
@@ -30,8 +33,10 @@
             <a href="{% url 'expediente_pacientes' %}" class="btn btn-emerald">Ver Expedientes</a>
         </div>
     </div>
+    {% endif %}
 
     <!-- Citas -->
+    {% if perms.JyGDreams.view_cita %}
     <div class="card card-action">
         <div class="card-body">
             <i class="bi bi-calendar-check-fill icon"></i>
@@ -40,8 +45,10 @@
             <a href="{% url 'cita_pacientes' %}" class="btn btn-emerald">Ver Citas</a>
         </div>
     </div>
+    {% endif %}
 
     <!-- Dashboard -->
+    {% if user.is_superuser %}
     <div class="card card-action">
         <div class="card-body">
             <i class="bi bi-file-bar-graph-fill icon"></i>
@@ -50,6 +57,7 @@
             <a href="{% url 'estadisticas' %}" class="btn btn-emerald">Revisar estadisticas</a>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
