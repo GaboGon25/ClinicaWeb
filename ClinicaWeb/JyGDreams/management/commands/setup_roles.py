@@ -15,11 +15,18 @@ from JyGDreams.models import (
 
 
 class Command(BaseCommand):
-    help = "Crea/actualiza grupos Doctor y Secretaria con permisos por módulo."
+    help = "Crea/actualiza grupos Doctor/a y Secretario/a con permisos por módulo."
 
     def handle(self, *args, **options):
-        doctor_group, _ = Group.objects.get_or_create(name="Doctores")
-        secretaria_group, _ = Group.objects.get_or_create(name="Secretarias")
+        # Renombrar grupos antiguos (si existen) a los nombres nuevos
+        for old_name, new_name in [("Doctores", "Doctor/a"), ("Secretarias", "Secretario/a")]:
+            old_group = Group.objects.filter(name=old_name).first()
+            if old_group:
+                old_group.name = new_name
+                old_group.save()
+
+        doctor_group, _ = Group.objects.get_or_create(name="Doctor/a")
+        secretaria_group, _ = Group.objects.get_or_create(name="Secretario/a")
 
         def perms_for(model, actions):
             ct = ContentType.objects.get_for_model(model)
@@ -47,5 +54,5 @@ class Command(BaseCommand):
         doctor_group.permissions.set(doctor_perms)
         secretaria_group.permissions.set(secretaria_perms)
 
-        self.stdout.write(self.style.SUCCESS("Roles configurados: Doctores, Secretarias."))
+        self.stdout.write(self.style.SUCCESS("Roles configurados: Doctor/a, Secretario/a."))
 

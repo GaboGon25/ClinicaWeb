@@ -37,6 +37,10 @@ def _has_perms(*perms):
         return user.is_authenticated and user.has_perms(perms)
     return user_passes_test(check, login_url="login")
 
+DOCTOR_GROUP_NAME = "Doctor/a"
+SECRETARY_GROUP_NAME = "Secretario/a"
+ROLE_GROUP_NAMES = [DOCTOR_GROUP_NAME, SECRETARY_GROUP_NAME]
+
 #def login(request):
     #return render(request, 'login.html')
 def login_view(request):
@@ -201,7 +205,7 @@ def mi_perfil(request):
 
 @user_passes_test(lambda u: u.is_authenticated and u.is_superuser, login_url="login")
 def crear_usuario(request):
-    roles = Group.objects.filter(name__in=["Doctores", "Secretarias"]).order_by("name")
+    roles = Group.objects.filter(name__in=ROLE_GROUP_NAMES).order_by("name")
     if request.method == "POST":
         username = (request.POST.get("username") or "").strip()
         first_name = (request.POST.get("first_name") or "").strip()
@@ -252,7 +256,7 @@ def crear_usuario(request):
 @user_passes_test(lambda u: u.is_superuser, login_url="login")
 def editar_usuario(request, user_id):
     usuario = get_object_or_404(User, id=user_id)
-    roles = Group.objects.filter(name__in=["Doctores", "Secretarias"]).order_by("name")
+    roles = Group.objects.filter(name__in=ROLE_GROUP_NAMES).order_by("name")
 
     if request.method == "POST":
         username = (request.POST.get("username") or "").strip()
@@ -618,7 +622,7 @@ def cita_pacientes(request):
     pacientes = Paciente.objects.all()
 
     # Filtrar por doctor si es doctor y no superuser
-    if request.user.groups.filter(name="Doctores").exists() and not request.user.is_superuser:
+    if request.user.groups.filter(name=DOCTOR_GROUP_NAME).exists() and not request.user.is_superuser:
         pacientes = pacientes.filter(
             Exists(
                 Cita.objects.filter(
@@ -672,7 +676,7 @@ def cita_pacientes(request):
 
     # --- Eventos para el calendario ---
     citas = Cita.objects.select_related('paciente').filter(estado__in=['AGENDADO', 'REPROGRAMADO'])
-    if request.user.groups.filter(name="Doctores").exists() and not request.user.is_superuser:
+    if request.user.groups.filter(name=DOCTOR_GROUP_NAME).exists() and not request.user.is_superuser:
         citas = citas.filter(doctor=request.user)
     eventos = []
     for cita in citas:
@@ -703,7 +707,7 @@ def editar_cita(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id)
     procedimientos = Procedimiento.objects.all()
     procedimientos_dict = {p.id: float(p.costo) for p in procedimientos}
-    doctores = User.objects.filter(groups__name="Doctores", is_active=True).order_by("first_name", "last_name", "username").distinct()
+    doctores = User.objects.filter(groups__name=DOCTOR_GROUP_NAME, is_active=True).order_by("first_name", "last_name", "username").distinct()
 
     # Obtener los procedimientos actuales de la cita
     procedimientos_actuales = list(cita.procedimientos.values_list('id', flat=True))
@@ -768,7 +772,7 @@ def editar_cita(request, cita_id):
 @permission_required("JyGDreams.view_cita", raise_exception=True)
 def detalle_cita(request , cita_id):
     cita = get_object_or_404(Cita, id=cita_id)
-    is_doctor = request.user.groups.filter(name="Doctores").exists() and not request.user.is_superuser
+    is_doctor = request.user.groups.filter(name=DOCTOR_GROUP_NAME).exists() and not request.user.is_superuser
     return render(request, 'detail_cita.html', {'cita': cita, 'is_doctor': is_doctor})
 
 
@@ -779,7 +783,7 @@ def agregar_cita(request, paciente_id):
     procedimientos_dict = {p.id: float(p.costo) for p in procedimientos}
     doctores = (
         User.objects.filter(is_active=True)
-        .filter(models.Q(is_superuser=True) | models.Q(groups__name="Doctores"))
+        .filter(models.Q(is_superuser=True) | models.Q(groups__name=DOCTOR_GROUP_NAME))
         .order_by("first_name", "last_name", "username")
         .distinct()
     )
@@ -833,7 +837,7 @@ def home_citas(request, paciente_id):
     citas = Cita.objects.filter(paciente=paciente).order_by('-fecha', '-hora')
     
     # Filtrar por doctor si es doctor y no superuser
-    if request.user.groups.filter(name="Doctores").exists() and not request.user.is_superuser:
+    if request.user.groups.filter(name=DOCTOR_GROUP_NAME).exists() and not request.user.is_superuser:
         citas = citas.filter(doctor=request.user)
     
     # Obtener parámetro de filtro por estado
@@ -848,7 +852,7 @@ def home_citas(request, paciente_id):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    is_doctor = request.user.groups.filter(name="Doctores").exists() and not request.user.is_superuser
+    is_doctor = request.user.groups.filter(name=DOCTOR_GROUP_NAME).exists() and not request.user.is_superuser
     
     return render(request, 'home_citas.html', {
         'paciente': paciente,
@@ -1382,7 +1386,7 @@ def ajax_filtrar_expedientes(request):
 @user_passes_test(lambda u: u.is_superuser, login_url="login")
 def lista_usuarios(request):
     query = request.GET.get('q', '')
-    usuarios = User.objects.filter(groups__name__in=['Doctores', 'Secretarias']).distinct()
+    usuarios = User.objects.filter(groups__name__in=ROLE_GROUP_NAMES).distinct()
 
     if query:
         usuarios = usuarios.filter(
@@ -1672,7 +1676,7 @@ def calendario_citas(request):
 def mis_citas(request):
     if not request.user.is_authenticated:
         return redirect("login")
-    if not (request.user.groups.filter(name="Doctores").exists() or request.user.is_superuser):
+    if not (request.user.groups.filter(name=DOCTOR_GROUP_NAME).exists() or request.user.is_superuser):
         return redirect("index")
     citas = Cita.objects.select_related("paciente").filter(
         doctor=request.user,
