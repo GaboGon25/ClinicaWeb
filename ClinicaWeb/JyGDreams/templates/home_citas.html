@@ -8,12 +8,12 @@
   <div class="row align-items-center mb-4 gy-3 flex-column flex-md-row">
     <div class="col text-center text-md-start mb-2 mb-md-0">
       <h2 class="fw-bold display-6 d-flex align-items-center justify-content-center justify-content-md-start gap-2" style="color:#2c3e50;">
-        <i class="bi bi-calendar2-heart-fill text-success fs-2"></i>
+        <i class="bi bi-calendar2-week-fill text-success fs-2"></i>
         Citas Registradas de {{ paciente.nombre }} {{ paciente.apellido }}
       </h2>
     </div>
     <div class="col-auto d-flex flex-column flex-md-row gap-2 justify-content-center">
-      <a href="{% url 'generar_pdf_citas' paciente.id %}" class="btn btn-danger shadow-sm rounded-pill px-4 py-2 d-flex align-items-center gap-2 w-100 w-md-auto" target="_blank">
+      <a href="{% url 'generar_pdf_citas' paciente.id %}" onclick="return verificarPDF(event)" class="btn btn-danger shadow-sm rounded-pill px-4 py-2 d-flex align-items-center gap-2 w-100 w-md-auto" target="_blank">
         <i class="bi bi-file-earmark-pdf fs-5"></i> <span class="fw-semibold">Generar PDF</span>
       </a>
       {% if perms.JyGDreams.add_cita and not is_doctor %}
@@ -146,6 +146,27 @@
     // Inicializar eventos al cargar la página
     initializeCardEvents();
   });
+
+  // Variable para verificar citas realizadas
+  {% if tiene_citas_realizadas %}
+  var tieneCitasRealizadas = true;
+  {% else %}
+  var tieneCitasRealizadas = false;
+  {% endif %}
+
+  function verificarPDF(event) {
+    if (!tieneCitasRealizadas) {
+      event.preventDefault();
+      Swal.fire({
+        icon: 'warning',
+        title: 'No se puede generar PDF',
+        text: 'El paciente debe tener al menos una cita con estado "Realizado" para generar el PDF.',
+        confirmButtonText: 'Entendido'
+      });
+      return false;
+    }
+    return true;
+  }
 </script>
 {% endblock %}
 {% endblock %}

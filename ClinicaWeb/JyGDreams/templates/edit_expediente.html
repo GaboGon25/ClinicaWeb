@@ -15,7 +15,7 @@
 <div class="container py-5">
 
   <h2 class="mb-4 text-success">
-    <i class="bi bi-journal-medical me-2"></i>
+    <i class="bi bi-pencil-square me-2"></i>
     {% if expediente %}Editando{% else %}Agregando{% endif %} Expediente de {{paciente.nombre}} {{paciente.apellido}}
   </h2>
 
@@ -181,7 +181,7 @@
     <!-- BOTÓN -->
     <div class="d-grid">
       <button type="submit" class="btn btn-warning btn-lg rounded-pill">
-        <i class="bi bi-plus-circle"></i>
+        <i class="bi bi-save"></i>
         {% if expediente %}Guardar Cambios{% else %}Agregar{% endif %}
       </button>
     </div>

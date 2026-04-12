@@ -3,12 +3,14 @@
 
 {% block title %}Crear Usuario - JyGDreams{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'JyGDreams/add_patient.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="container py-5" style="max-width: 900px;">
   <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
-    <h2 class="m-0" style="color:#2c3e50;">
-      <i class="bi bi-person-plus-fill text-success me-2"></i>Crear usuario interno
-    </h2>
+    <h2><i class="bi bi-person-badge-fill me-2"></i>Crear usuario interno</h2>
     <a href="{% url 'index' %}" class="btn btn-outline-success">
       <i class="bi bi-arrow-left"></i> Volver
     </a>
@@ -65,7 +67,7 @@
 
         <div class="col-12 d-grid mt-3">
           <button class="btn btn-success btn-lg rounded-pill">
-            <i class="bi bi-check2-circle me-2"></i>Crear usuario
+            <i class="bi bi-person-badge-fill me-2"></i>Crear usuario
           </button>
         </div>
       </form>

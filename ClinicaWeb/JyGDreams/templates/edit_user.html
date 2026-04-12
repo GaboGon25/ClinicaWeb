@@ -3,12 +3,14 @@
 
 {% block title %}Editar Usuario - JyGDreams{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'JyGDreams/add_patient.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="container py-5" style="max-width: 900px;">
   <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
-    <h2 class="m-0" style="color:#2c3e50;">
-      <i class="bi bi-pencil-square text-primary me-2"></i>Editar usuario interno
-    </h2>
+   <h2><i class="bi bi-pencil-square me-2"></i>Editando Usuario</h2>
     <a href="{% url 'lista_usuarios' %}" class="btn btn-outline-success">
       <i class="bi bi-arrow-left"></i> Volver
     </a>
@@ -64,7 +66,7 @@
         </div>
 
         <div class="col-12 d-grid mt-3">
-          <button class="btn btn-primary btn-lg rounded-pill">
+          <button class="btn btn-warning btn-lg rounded-pill">
             <i class="bi bi-save me-2"></i>Guardar cambios
           </button>
         </div>

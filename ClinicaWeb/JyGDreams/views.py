@@ -836,6 +836,9 @@ def home_citas(request, paciente_id):
     paciente = get_object_or_404(Paciente, id=paciente_id)
     citas = Cita.objects.filter(paciente=paciente).order_by('-fecha', '-hora')
     
+    # Verificar si el paciente tiene al menos una cita con estado REALIZADO
+    tiene_citas_realizadas = Cita.objects.filter(paciente=paciente, estado='REALIZADO').exists()
+    
     # Filtrar por doctor si es doctor y no superuser
     if request.user.groups.filter(name=DOCTOR_GROUP_NAME).exists() and not request.user.is_superuser:
         citas = citas.filter(doctor=request.user)
@@ -860,6 +863,7 @@ def home_citas(request, paciente_id):
         'page_obj': page_obj,
         'estado': estado,
         'is_doctor': is_doctor,
+        'tiene_citas_realizadas': tiene_citas_realizadas,
     })
 
 
@@ -988,7 +992,7 @@ def detalle_pago(request, cita_id):
     cita = get_object_or_404(Cita, id=cita_id)
     pago = Pago.objects.filter(cita=cita).first()
     if not pago:
-        messages.warning(request, "Primero debe registrar el pago para ver el detalle.")
+        messages.warning(request, "Primero debe registrar el pago para ver el detalle")
         return redirect('home_citas', paciente_id=cita.paciente.id)
     cita_procedimientos = CitaProcedimiento.objects.filter(cita=cita)
     # Usar el total del pago que ya incluye los descuentos aplicados
