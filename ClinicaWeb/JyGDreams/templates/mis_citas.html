@@ -54,7 +54,7 @@
               <tr>
                 <td class="text-center fw-semibold">{{ c.fecha|date:"d/m/Y" }}</td>
                 <td class="text-center">{{ c.hora|time:"H:i" }}</td>
-                <td class="text-center">{{ c.paciente.nombre }} {{ c.paciente.apellido }}</td>
+                <td class="text-center">{{ c.paciente.nombre }} {{ c.paciente.apellido }}{% if c.paciente.edad is not None %} ({{ c.paciente.edad }} años){% endif %}</td>
                 <td class="text-center">
                   <span class="badge bg-success-subtle text-success border border-success-subtle">
                     {{ c.get_estado_display }}

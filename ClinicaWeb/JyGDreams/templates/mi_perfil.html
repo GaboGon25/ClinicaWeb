@@ -3,12 +3,14 @@
 
 {% block title %}Mi Perfil - JyGDreams{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'JyGDreams/add_patient.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="container py-5" style="max-width: 800px;">
   <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
-    <h2 class="m-0" style="color:#2c3e50;">
-      <i class="bi bi-person-circle text-success me-2"></i>Mi perfil
-    </h2>
+    <h2><i class="bi bi-person-circle me-2"></i>Mi Perfil</h2>
   </div>
 
   <div class="card shadow-sm border-0 rounded-4">
@@ -54,8 +56,8 @@
         </div>
 
         <div class="col-12 d-grid mt-3">
-          <button class="btn btn-success btn-lg rounded-pill">
-            <i class="bi bi-check2-circle me-2"></i>Guardar cambios
+          <button class="btn btn-warning btn-lg rounded-pill">
+            <i class="bi bi-save me-2"></i>Guardar cambios
           </button>
         </div>
       </form>

@@ -17,6 +17,16 @@ class Paciente(models.Model):
     def __str__(self):
         return f"{self.nombre} {self.apellido}"
 
+    @property
+    def edad(self):
+        if not self.fecha_nacimiento:
+            return None
+        today = timezone.localdate()
+        age = today.year - self.fecha_nacimiento.year
+        if (today.month, today.day) < (self.fecha_nacimiento.month, self.fecha_nacimiento.day):
+            age -= 1
+        return age
+
 class Cita(models.Model):
     ESTADO_CHOICES = [
         ('AGENDADO', 'Agendado'),

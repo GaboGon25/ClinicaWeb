@@ -7,6 +7,7 @@
           <div class="card-body d-flex flex-column justify-content-center align-items-start">
             <h5 class="card-title mb-2">{{ paciente.nombre }} {{ paciente.apellido }}</h5>
             <p class="card-text"><i class="bi bi-briefcase-fill me-2"></i>{{ paciente.ocupacion }}</p>
+            <p class="card-text"><i class="bi bi-heart-pulse me-2"></i>{{ paciente.edad }} años</p>
             <p class="card-text mb-0">
               <span class="status-badge {% if paciente.has_expediente %}status-has-expediente{% else %}status-no-expediente{% endif %}">
                 {% if paciente.has_expediente %}Tiene expediente{% else %}No tiene expediente{% endif %}
