@@ -387,6 +387,11 @@ def expediente_pacientes(request):
     elif tiene_expediente == 'no':
         pacientes = pacientes.filter(expediente__isnull=True)
     
+    # Agrega un campo booleano para mostrar si el paciente tiene expediente
+    pacientes = pacientes.annotate(
+        has_expediente=Exists(Expediente.objects.filter(paciente=OuterRef('pk')))
+    )
+    
     # Paginación
     paginator = Paginator(pacientes, 6)  # 6 pacientes por página
     page_number = request.GET.get('page')
@@ -668,6 +673,15 @@ def cita_pacientes(request):
                 ).order_by('fecha').values('fecha')[:1]
             )
         ).order_by('proxima_cita')
+
+    cita_filter = Q(cita__estado__in=['AGENDADO', 'REPROGRAMADO'])
+    if request.user.groups.filter(name=DOCTOR_GROUP_NAME).exists() and not request.user.is_superuser:
+        cita_filter &= Q(cita__doctor=request.user)
+
+    pacientes = pacientes.annotate(
+        has_expediente=Exists(Expediente.objects.filter(paciente=OuterRef('pk'))),
+        citas_por_atender=Count('cita', filter=cita_filter, distinct=True)
+    )
 
     # --- Paginación ---
     paginator = Paginator(pacientes, 6)  # 6 cards por página
@@ -1081,6 +1095,15 @@ def ajax_filtrar_pacientes(request):
             )
         ).order_by('proxima_cita')
 
+    cita_filter = Q(cita__estado__in=['AGENDADO', 'REPROGRAMADO'])
+    if request.user.groups.filter(name=DOCTOR_GROUP_NAME).exists() and not request.user.is_superuser:
+        cita_filter &= Q(cita__doctor=request.user)
+
+    pacientes = pacientes.annotate(
+        has_expediente=Exists(Expediente.objects.filter(paciente=OuterRef('pk'))),
+        citas_por_atender=Count('cita', filter=cita_filter, distinct=True)
+    )
+
     # Paginación
     paginator = Paginator(pacientes, 6)
     page_obj = paginator.get_page(page_number)
@@ -1369,6 +1392,11 @@ def ajax_filtrar_expedientes(request):
         pacientes = pacientes.filter(expediente__isnull=False)
     elif tiene_expediente == 'no':
         pacientes = pacientes.filter(expediente__isnull=True)
+    
+    # Agrega un campo booleano para mostrar si el paciente tiene expediente
+    pacientes = pacientes.annotate(
+        has_expediente=Exists(Expediente.objects.filter(paciente=OuterRef('pk')))
+    )
     
     # Paginación
     paginator = Paginator(pacientes, 6)  # 6 pacientes por página

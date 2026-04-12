@@ -81,6 +81,39 @@ body {
   color: #1a2d35;
 }
 
+.status-badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-top: 0.8rem;
+}
+
+.status-has-expediente {
+  background: #d4edda;
+  color: #155724;
+  box-shadow: inset 0 0 0 1px rgba(40, 167, 69, 0.15);
+}
+
+.status-no-expediente {
+  background: #f8d7da;
+  color: #721c24;
+  box-shadow: inset 0 0 0 1px rgba(220, 53, 69, 0.15);
+}
+
+.status-citas-pendientes {
+  background: #ffffff;
+  color: #1d1d1d;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.status-label {
+  margin-left: 0.75rem;
+  color: inherit;
+  font-weight: 500;
+}
+
 .search-bar-custom {
   background: rgba(255,255,255,0.18); /* Fondo translúcido */
   border: none;
