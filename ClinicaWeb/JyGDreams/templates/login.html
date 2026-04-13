@@ -12,34 +12,62 @@
 </head>
 <body>
 
-<div class="login-container">
-  <!-- Izquierda -->
-  <div class="login-left d-flex flex-column justify-content-center align-items-center">
-    <a href="{% url 'home_view' %}">
-      <img src="{% static 'JyGDreams/img/icon-clinica.png' %}" height="300px" alt="Logo Clínica" class="logo">
-    </a>
-    <h1 class="text-white fw-bold text-center">Clínica Estética<br>JyGDreams</h1>
-  </div>
-
-  <!-- Derecha -->
-  <div class="login-right d-flex flex-column justify-content-center px-5">
-    <h2 class="login-title text-center mb-4">Inicia Sesión</h2>
-    <form method="post">
-      {% csrf_token %}
-      <div class="mb-3">
-        <label for="usuario" class="form-label">Usuario</label>
-        <input type="text" class="form-control" id="usuario" name="username" placeholder="Ingresa tu usuario">
-      </div>
-      <div class="mb-4">
-        <label for="password" class="form-label">Contraseña</label>
-        <input type="password" class="form-control" id="password" name="password" placeholder="Ingresa tu contraseña">
-      </div>
-      <button type="submit" class="btn btn-login">Iniciar Sesión</button>
-    </form>
-    <div class="mt-3 text-center">
-      <a href="{% url 'password_reset_request' %}" class="text-success fw-semibold" style="text-decoration: underline;">
-        ¿Olvidaste tu contraseña?
+<div class="page-shell">
+  <div class="login-container shadow-soft">
+    <div class="login-left d-flex flex-column justify-content-center align-items-center text-center">
+      <a href="{% url 'home_view' %}">
+        <img src="{% static 'JyGDreams/img/icon-clinica.png' %}" alt="Logo Clínica" class="logo mb-4">
       </a>
+      <h1 class="display-6 text-white fw-bold">Clínica Estética</h1>
+      <p class="text-white-75 mt-2">Bienvenido de nuevo. Administra tus citas y pacientes con estilo.</p>
+    </div>
+
+    <div class="login-right d-flex flex-column justify-content-center px-5 py-4">
+      <div class="login-header text-center mb-4">
+        <h2 class="login-title mb-1">Inicia Sesión</h2>
+        <p class="login-subtitle text-muted">Mantén tus datos seguros y accede rápidamente.</p>
+      </div>
+
+      <div class="form-switcher position-relative">
+          <div class="form-pane form-pane-login{% if not reset_active %} active{% endif %}">
+            <form method="post" novalidate>
+              {% csrf_token %}
+              <div class="mb-3 input-group-float">
+                <label for="usuario" class="form-label">Usuario</label>
+                <input type="text" class="form-control" id="usuario" name="username" placeholder="Ingresa tu usuario" value="{{ login_username|default:'' }}">
+              </div>
+              <div class="mb-4 input-group-float">
+                <label for="password" class="form-label">Contraseña</label>
+                <input type="password" class="form-control" id="password" name="password" placeholder="Ingresa tu contraseña">
+              </div>
+              <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-login">Iniciar Sesión</button>
+              </div>
+            </form>
+            <div class="text-center mt-2">
+              <button type="button" class="forgot-link" id="show-reset-form">¿Olvidaste tu contraseña?</button>
+            </div>
+          </div>
+
+          <div class="form-pane form-pane-reset{% if reset_active %} active{% endif %}">
+            <form method="post" action="{% url 'login' %}" novalidate>
+              {% csrf_token %}
+              <input type="hidden" name="form_type" value="reset_password">
+              <h3 class="reset-title mb-3">Recuperar contraseña</h3>
+              <p class="text-muted mb-4">Ingresa tu usuario para recibir una clave temporal en el correo registrado.</p>
+              <div class="mb-4 input-group-float">
+                <label class="form-label">Usuario</label>
+                <input type="text" name="username" class="form-control" required placeholder="Nombre de usuario" value="{{ username|default:'' }}">
+              </div>
+              <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-reset">Enviar clave temporal</button>
+              </div>
+            </form>
+            <div class="text-center mt-2">
+              <button type="button" class="button-link" id="back-to-login">Volver al inicio de sesión</button>
+            </div>
+          </div>
+        </div>
     </div>
   </div>
 </div>
@@ -58,6 +86,27 @@
     </script>
   {% endfor %}
 {% endif %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const showReset = document.getElementById('show-reset-form');
+    const backLogin = document.getElementById('back-to-login');
+    const loginPane = document.querySelector('.form-pane-login');
+    const resetPane = document.querySelector('.form-pane-reset');
+
+    showReset.addEventListener('click', function(event) {
+      event.preventDefault();
+      loginPane.classList.remove('active');
+      resetPane.classList.add('active');
+    });
+
+    backLogin.addEventListener('click', function(event) {
+      event.preventDefault();
+      resetPane.classList.remove('active');
+      loginPane.classList.add('active');
+    });
+  });
+</script>
 
 </body>
 </html>

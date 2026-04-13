@@ -41,12 +41,74 @@ DOCTOR_GROUP_NAME = "Doctor/a"
 SECRETARY_GROUP_NAME = "Secretario/a"
 ROLE_GROUP_NAMES = [DOCTOR_GROUP_NAME, SECRETARY_GROUP_NAME]
 
+
+def _process_password_reset_request(request, username):
+    username = (username or "").strip()
+    if not username:
+        messages.error(request, "Ingresa tu usuario.")
+        return render(request, "login.html", {"username": username, "reset_active": True})
+
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        messages.error(request, "El usuario no está registrado en el sistema.")
+        return render(request, "login.html", {"username": username, "reset_active": True})
+
+    if not user.is_active:
+        messages.error(request, "Tu cuenta está inactiva. Contacta al administrador.")
+        return render(request, "login.html", {"username": username, "reset_active": True})
+
+    if not user.email:
+        messages.error(request, "El usuario no tiene un correo registrado en su perfil.")
+        return render(request, "login.html", {"username": username, "reset_active": True})
+
+    code = secrets.token_urlsafe(8)
+    expires_at = timezone.now() + timedelta(minutes=15)
+    PasswordResetCode.objects.create(user=user, code=code, expires_at=expires_at)
+
+    user.set_password(code)
+    user.save(update_fields=["password"])
+
+    reset_url = request.build_absolute_uri(reverse("password_reset_confirm")) + f"?code={code}"
+
+    context = {
+        "user": user,
+        "code": code,
+        "expires_minutes": 15,
+        "reset_url": reset_url,
+        "clinic_name": "Clínica Estética JyGDreams",
+        "logo_url": request.build_absolute_uri(
+            settings.STATIC_URL + "JyGDreams/img/icon-clinica.png"
+        ),
+    }
+    html_body = render_to_string("email_password_reset.html", context)
+
+    subject = "Recuperación de contraseña - JyGDreams"
+    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@example.com")
+    to = [user.email]
+
+    msg = EmailMultiAlternatives(subject, "", from_email, to)
+    msg.attach_alternative(html_body, "text/html")
+    try:
+        msg.send()
+        messages.success(request, "Si el usuario existe y tiene correo registrado, se ha enviado una clave temporal.")
+    except Exception as e:
+        messages.error(request, f"Error al enviar el email: {str(e)}")
+
+    return render(request, "login.html", {"reset_active": True})
+
+
 #def login(request):
     #return render(request, 'login.html')
 def login_view(request):
     if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
+        form_type = request.POST.get('form_type', 'login')
+        if form_type == 'reset_password':
+            username = request.POST.get('username', '').strip()
+            return _process_password_reset_request(request, username)
+
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
@@ -54,6 +116,8 @@ def login_view(request):
             return redirect('index')  # Cambia 'home' por el nombre de tu vista principal
         else:
             messages.error(request, 'Usuario o contraseña incorrectos')
+            return render(request, 'login.html', {"login_username": username})
+
     return render(request, 'login.html')
 
 @login_required(login_url="login")
