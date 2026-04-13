@@ -62,25 +62,26 @@ def index(request):
 
 
 def password_reset_request(request):
+    username = ""
     if request.method == "POST":
         username = (request.POST.get("username") or "").strip()
         if not username:
             messages.error(request, "Ingresa tu usuario.")
-            return render(request, "password_reset_request.html")
+            return render(request, "password_reset_request.html", {"username": username})
 
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
-            messages.success(request, "Si el usuario existe y tiene correo registrado, se ha enviado una clave temporal.")
-            return redirect("login")
+            messages.error(request, "El usuario no está registrado en el sistema.")
+            return render(request, "password_reset_request.html", {"username": username})
 
         if not user.is_active:
             messages.error(request, "Tu cuenta está inactiva. Contacta al administrador.")
-            return redirect("login")
+            return render(request, "password_reset_request.html", {"username": username})
 
         if not user.email:
             messages.error(request, "El usuario no tiene un correo registrado en su perfil.")
-            return render(request, "password_reset_request.html")
+            return render(request, "password_reset_request.html", {"username": username})
 
         code = secrets.token_urlsafe(8)
         expires_at = timezone.now() + timedelta(minutes=15)
@@ -118,7 +119,7 @@ def password_reset_request(request):
             messages.error(request, f"Error al enviar el email: {str(e)}")
         return redirect("login")
 
-    return render(request, "password_reset_request.html")
+    return render(request, "password_reset_request.html", {"username": username})
 
 
 def password_reset_confirm(request):
