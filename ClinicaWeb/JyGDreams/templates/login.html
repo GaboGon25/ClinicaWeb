@@ -55,6 +55,7 @@
               <input type="hidden" name="form_type" value="reset_password">
               <h3 class="reset-title mb-3">Recuperar contraseña</h3>
               <p class="text-muted mb-4">Ingresa tu usuario para recibir una clave temporal en el correo registrado.</p>
+              <p class="text-muted mb-4">La clave temporal expirará en <strong>15 minutos</strong></p>
               <div class="mb-4 input-group-float">
                 <label class="form-label">Usuario</label>
                 <input type="text" name="username" class="form-control" required placeholder="Nombre de usuario" value="{{ username|default:'' }}">

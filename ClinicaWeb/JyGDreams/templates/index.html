@@ -58,6 +58,18 @@
         </div>
     </div>
     {% endif %}
+
+    <!-- Usuarios -->
+    {% if user.is_superuser %}
+    <div class="card card-action">
+        <div class="card-body">
+            <i class="bi bi-person-fill-lock icon"></i>
+            <h5 class="card-title">Usuarios</h5>
+            <p class="card-text">Gestiona los usuarios del sistema</p>
+            <a href="{% url 'lista_usuarios' %}" class="btn btn-emerald">Ver Usuarios</a>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

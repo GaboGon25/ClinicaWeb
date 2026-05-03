@@ -73,7 +73,7 @@
           </td>
           <td class="text-center">
             <div class="dropdown">
-              <button class="btn btn-link text-dark p-0" type="button" id="dropdownMenuButton{{ usuario.id }}" data-bs-toggle="dropdown" aria-expanded="false" data-bs-boundary="viewport" style="text-decoration: none;">
+              <button class="btn btn-acciones p-0" type="button" id="dropdownMenuButton{{ usuario.id }}" data-bs-toggle="dropdown" aria-expanded="false" data-bs-boundary="viewport" style="text-decoration: none;">
                 <i class="bi bi-three-dots-vertical fs-4"></i>
               </button>
               <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton{{ usuario.id }}" data-bs-popper="static">
@@ -83,7 +83,7 @@
                       {% csrf_token %}
                       <input type="hidden" name="user_id" value="{{ usuario.id }}">
                       <input type="hidden" name="action" value="deactivate">
-                      <button type="submit" class="dropdown-item text-danger">
+                      <button type="submit" class="dropdown-item">
                         <i class="bi bi-x-circle me-2"></i>Desactivar
                       </button>
                     </form>
@@ -94,15 +94,15 @@
                       {% csrf_token %}
                       <input type="hidden" name="user_id" value="{{ usuario.id }}">
                       <input type="hidden" name="action" value="activate">
-                      <button type="submit" class="dropdown-item text-success">
+                      <button type="submit" class="dropdown-item">
                         <i class="bi bi-check-circle me-2"></i>Activar
                       </button>
                     </form>
                   </li>
                 {% endif %}
                 <li>
-                  <a href="{% url 'editar_usuario' usuario.id %}" class="dropdown-item text-primary">
-                    <i class="bi bi-pencil-square me-2"></i>Editar
+                  <a href="{% url 'editar_usuario' usuario.id %}" class="dropdown-item">
+                    <i class="bi bi-pencil-square me-2"></i>Editar Usuario
                   </a>
                 </li>
               </ul>
