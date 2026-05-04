@@ -302,6 +302,13 @@
     animation: fadeInUp 0.6s ease-out;
   }
 
+  .proc-border {
+    border: 2px solid;
+    border-radius: 5px;
+    padding: 5px 10px;
+    display: inline-block;
+  }
+
   /* Responsive */
   @media (max-width: 768px) {
     .dashboard-title {
@@ -318,6 +325,14 @@
     
     .filter-section {
       padding: 1.5rem;
+    }
+    
+    .chart-container .position-relative {
+      min-height: 300px;
+    }
+    
+    .proc-border {
+      padding: 3px 5px;
     }
   }
 
@@ -449,38 +464,54 @@
         <small class="text-muted d-block mt-1">(Período seleccionado)</small>
       {% endif %}
     </h5>
-    <div class="table-responsive">
-        <table class="table table-modern">
-        <thead>
-          <tr>
-            <th>Procedimiento</th>
-            <th>Ganancia (C$)</th>
-            <th>Porcentaje</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for proc in ganancias_por_procedimiento %}
-          <tr>
-              <td><strong>{{ proc.titulo }}</strong></td>
-              <td><span class="text-success fw-bold">C${{ proc.ganancia|floatformat:2 }}</span></td>
-            <td>
-              {% if ganancias_totales > 0 %}
-                  <span class="badge bg-success rounded-pill">{{ proc.ganancia|div:ganancias_totales|mul:100|floatformat:1 }}%</span>
-              {% else %}
-                  <span class="badge bg-secondary rounded-pill">0%</span>
-              {% endif %}
-            </td>
-          </tr>
-          {% empty %}
-          <tr>
-              <td colspan="3" class="no-data">
-                <i class="bi bi-graph-down"></i>
-                <p>No hay datos de ganancias en este rango de fechas.</p>
-              </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    <div class="row align-items-center">
+      <div class="col-lg-6 mb-4">
+        {% if labels_ganancias and data_ganancias %}
+          <div class="position-relative" style="min-height: 400px;">
+            <canvas id="gananciasBarChart"></canvas>
+          </div>
+        {% else %}
+          <div class="no-data">
+            <i class="bi bi-bar-chart-line"></i>
+            <p>No hay datos para mostrar en el gráfico de ganancias.</p>
+          </div>
+        {% endif %}
+      </div>
+      <div class="col-lg-6">
+        <div class="table-responsive">
+          <table class="table table-modern">
+            <thead>
+              <tr>
+                <th>Procedimiento</th>
+                <th>Ganancia (C$)</th>
+                <th>Porcentaje</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for proc in ganancias_por_procedimiento %}
+              <tr>
+                <td><strong class="proc-border" style="border-color: {{ proc.color }};">{{ proc.titulo }}</strong></td>
+                <td><span class="text-success fw-bold">C${{ proc.ganancia|floatformat:2 }}</span></td>
+                <td>
+                  {% if ganancias_totales > 0 %}
+                    {{ proc.ganancia|div:ganancias_totales|mul:100|floatformat:1 }}%
+                  {% else %}
+                    0%
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="3" class="no-data">
+                  <i class="bi bi-graph-down"></i>
+                  <p>No hay datos de ganancias en este rango de fechas.</p>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -495,7 +526,7 @@
     <div class="row">
         <div class="col-lg-6 mb-4">
         {% if data_veces %}
-          <div class="position-relative">
+          <div class="position-relative" style="min-height: 400px;">
         <canvas id="vecesPieChart"></canvas>
           </div>
         {% else %}
@@ -518,13 +549,13 @@
             <tbody>
               {% for proc in cantidad_por_procedimiento %}
               <tr>
-                  <td><strong>{{ proc.titulo }}</strong></td>
+                  <td><strong class="proc-border" style="border-color: {{ proc.color }};">{{ proc.titulo }}</strong></td>
                   <td><span class="text-success fw-bold">{{ proc.cantidad }}</span></td>
                 <td>
                   {% if total_procedimientos > 0 %}
-                      <span class="badge bg-warning text-dark rounded-pill">{{ proc.cantidad|div:total_procedimientos|mul:100|floatformat:1 }}%</span>
+                      {{ proc.cantidad|div:total_procedimientos|mul:100|floatformat:1 }}%
                   {% else %}
-                      <span class="badge bg-secondary rounded-pill">0%</span>
+                      0%
                   {% endif %}
                 </td>
               </tr>
@@ -550,14 +581,18 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {{ labels_veces|json_script:"labelsVeces" }}
 {{ data_veces|json_script:"dataVeces" }}
+{{ labels_ganancias|json_script:"labelsGanancias" }}
+{{ data_ganancias|json_script:"dataGanancias" }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   var labels = JSON.parse(document.getElementById('labelsVeces').textContent);
   var data = JSON.parse(document.getElementById('dataVeces').textContent);
+  var labelsGanancias = JSON.parse(document.getElementById('labelsGanancias').textContent);
+  var dataGanancias = JSON.parse(document.getElementById('dataGanancias').textContent);
 
   if (labels.length > 0 && data.length > 0) {
     var ctx = document.getElementById('vecesPieChart').getContext('2d');
-    var vecesPieChart = new Chart(ctx, {
+    new Chart(ctx, {
       type: 'doughnut',
       data: {
         labels: labels,
@@ -616,6 +651,76 @@ document.addEventListener('DOMContentLoaded', function() {
         animation: {
           animateRotate: true,
           animateScale: true
+        }
+      }
+    });
+  }
+
+  if (labelsGanancias.length > 0 && dataGanancias.length > 0) {
+    var colors = [
+      '#2e7d32',
+      '#ff6b35',
+      '#3498db',
+      '#ff9f1c',
+      '#9b59b6',
+      '#e74c3c',
+      '#f39c12',
+      '#1abc9c',
+      '#e67e22',
+      '#34495e'
+    ];
+    var gananciasCtx = document.getElementById('gananciasBarChart').getContext('2d');
+    new Chart(gananciasCtx, {
+      type: 'bar',
+      data: {
+        labels: labelsGanancias,
+        datasets: [{
+          label: 'Ganancias (C$)',
+          data: dataGanancias,
+          backgroundColor: colors.slice(0, labelsGanancias.length),
+          borderColor: colors.slice(0, labelsGanancias.length),
+          borderWidth: 1,
+          hoverBackgroundColor: colors.slice(0, labelsGanancias.length).map(color => color + 'CC')
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 0,
+              autoSkip: true,
+              font: { size: 12 }
+            }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return 'C$' + value;
+              }
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            titleColor: '#fff',
+            bodyColor: '#fff',
+            borderColor: '#2e7d32',
+            borderWidth: 1,
+            cornerRadius: 10,
+            callbacks: {
+              label: function(context) {
+                return 'Ganancia: C$' + context.parsed.y.toFixed(2);
+              }
+            }
+          }
         }
       }
     });

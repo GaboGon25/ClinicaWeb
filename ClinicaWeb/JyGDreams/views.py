@@ -1245,6 +1245,16 @@ def estadisticas(request):
     # Datos para el gráfico de pastel (veces realizado)
     labels_veces = [c['titulo'] for c in cantidad_por_procedimiento]
     data_veces = [c['cantidad'] for c in cantidad_por_procedimiento]
+    labels_ganancias = [g['titulo'] for g in ganancias_por_procedimiento]
+    data_ganancias = [g['ganancia'] for g in ganancias_por_procedimiento]
+    
+    colores = ['#2e7d32', '#ff6b35', '#3498db', '#ff9f1c', '#9b59b6', '#e74c3c', '#f39c12', '#1abc9c', '#e67e22', '#34495e']
+    
+    for i, proc in enumerate(ganancias_por_procedimiento):
+        proc['color'] = colores[i % len(colores)]
+    
+    for i, proc in enumerate(cantidad_por_procedimiento):
+        proc['color'] = colores[i % len(colores)]
     
     context = {
         'ganancias_totales': ganancias_totales,
@@ -1254,6 +1264,8 @@ def estadisticas(request):
         'cantidad_por_procedimiento': cantidad_por_procedimiento,
         'labels_veces': labels_veces,
         'data_veces': data_veces,
+        'labels_ganancias': labels_ganancias,
+        'data_ganancias': data_ganancias,
         'fecha_inicio': fecha_inicio or '',
         'fecha_fin': fecha_fin or '',
     }
@@ -1316,6 +1328,7 @@ def generar_pdf_citas(request, paciente_id):
     
     # Información del paciente
     elements.append(Paragraph(f"<b>Paciente:</b> {paciente.nombre} {paciente.apellido}", styles['Normal']))
+    elements.append(Paragraph(f"<b>Edad:</b> {paciente.edad}", styles['Normal']))
     elements.append(Paragraph(f"<b>Ocupación:</b> {paciente.ocupacion}", styles['Normal']))
     elements.append(Paragraph(f"<b>Teléfono:</b> {paciente.telefono}", styles['Normal']))
     elements.append(Paragraph(f"<b>Correo:</b> {paciente.correo}", styles['Normal']))
@@ -1596,6 +1609,7 @@ def generar_pdf_expediente(request, expediente_id):
     elements.append(Paragraph("<b>Datos del Paciente</b>", section_title))
     paciente_data = [
         ["Nombre", f"{paciente.nombre} {paciente.apellido}"],
+        ["Edad", paciente.edad],
         ["Ocupación", paciente.ocupacion],
         ["Teléfono", paciente.telefono],
         ["Correo", paciente.correo],
