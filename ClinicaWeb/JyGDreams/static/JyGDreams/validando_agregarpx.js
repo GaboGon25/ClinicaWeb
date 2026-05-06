@@ -1,3 +1,18 @@
+function calcularEdad(fechaNacimiento, hoy = new Date()) {
+  const nacimiento = new Date(fechaNacimiento);
+  let edad = hoy.getFullYear() - nacimiento.getFullYear();
+  const mes = hoy.getMonth() - nacimiento.getMonth();
+
+  if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+    edad--;
+  }
+
+  return edad;
+}
+
+  module.exports = { calcularEdad };
+
+
 document.addEventListener("DOMContentLoaded", function () {
   const nombreInput = document.querySelector("input[name='nombre']");
   const apellidoInput = document.querySelector("input[name='apellido']");

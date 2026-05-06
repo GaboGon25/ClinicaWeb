@@ -123,3 +123,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 });
+
+// Esto asegura que el código se ejecute en pruebas
+if (typeof document !== "undefined") {
+  document.dispatchEvent(new Event("DOMContentLoaded"));
+}

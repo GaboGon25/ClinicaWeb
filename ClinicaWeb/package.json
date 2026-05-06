@@ -1,0 +1,31 @@
+{
+  "name": "clinicaweb",
+  "version": "1.0.0",
+  "description": "- requirements.txt: Actualizado con las dependencias necesarias para producción\r - build.sh: Script para instalar dependencias y recopilar archivos estáticos\r - Procfile: Configuración para ejecutar la aplicación con Gunicorn\r - .env: Archivo para variables de entorno (no incluido en el repositorio)",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:coverage": "jest --coverage"
+
+  },
+  "jest": {
+ "collectCoverage": true,
+ "collectCoverageFrom": [
+ "src/**/*.js",
+ "!src/**/*.test.js"
+ ],
+ "coverageReporters": ["text", "html"]
+ },
+
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "jest": "^30.3.0",
+    "jest-environment-jsdom": "^30.3.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom"
+  }
+}

@@ -1,0 +1,308 @@
+document.addEventListener('DOMContentLoaded', function() {
+  const montoFinal = document.getElementById('monto-final');
+  const descuentoInputs = document.querySelectorAll('.descuento-input');
+  const checkboxesDescuento = document.querySelectorAll('.checkbox-descuento');
+  
+  // Función para validar un descuento individual (validación final)
+  function validarDescuento(input) {
+    const procedimientoId = input.dataset.procedimientoId;
+    const costo = parseFloat(input.dataset.costo);
+    const descuento = parseFloat(input.value) || 0;
+    const errorDiv = document.getElementById(`error_${procedimientoId}`);
+    
+    if (!errorDiv) return true;
+    
+    errorDiv.style.display = 'none';
+    errorDiv.textContent = '';
+    input.classList.remove('is-invalid');
+    
+    if (descuento < 0) {
+      errorDiv.textContent = 'El descuento no puede ser negativo.';
+      errorDiv.style.display = 'block';
+      input.classList.add('is-invalid');
+      return false;
+    }
+    
+    if (descuento > costo) {
+      errorDiv.textContent = `El descuento no puede exceder el costo de C$${costo.toFixed(2)}.`;
+      errorDiv.style.display = 'block';
+      input.classList.add('is-invalid');
+      return false;
+    }
+    
+    return true;
+  }
+  
+  // Función de validación en tiempo real (se ejecuta mientras el usuario escribe)
+  function validarEnTiempoReal(input) {
+    const costo = parseFloat(input.dataset.costo) || 0;
+    const procedimientoId = input.dataset.procedimientoId;
+    const errorDiv = document.getElementById(`error_${procedimientoId}`);
+    
+    if (!errorDiv) return;
+    
+    // Obtener el valor SIN procesar para validar lo que el usuario está escribiendo
+    let valorRaw = input.value;
+    let valor = valorRaw.replace(/[^0-9.]/g, '');
+    const valorNum = parseFloat(valor) || 0;
+    
+    // Validar y mostrar error INMEDIATAMENTE mientras el usuario escribe
+    if (valor && !isNaN(valorNum)) {
+      if (valorNum > costo) {
+        // Mostrar error INMEDIATAMENTE cuando excede
+        errorDiv.textContent = `⚠️ El descuento no puede exceder el costo de C$${costo.toFixed(2)}. Se ajustará automáticamente.`;
+        errorDiv.style.display = 'block';
+        input.classList.add('is-invalid');
+        // Forzar renderizado inmediato
+        errorDiv.offsetHeight; // Force reflow
+        return false;
+      } else if (valorNum < 0) {
+        // Mostrar error si es negativo
+        errorDiv.textContent = '⚠️ El descuento no puede ser negativo.';
+        errorDiv.style.display = 'block';
+        input.classList.add('is-invalid');
+        return false;
+      }
+    }
+    
+    // Limpiar error si está dentro del rango válido
+    errorDiv.style.display = 'none';
+    errorDiv.textContent = '';
+    input.classList.remove('is-invalid');
+    return true;
+  }
+  
+  // Función para actualizar el subtotal de un procedimiento
+  function actualizarSubtotal(procedimientoId) {
+    const checkbox = document.getElementById(`habilitar_descuento_${procedimientoId}`);
+    const input = document.getElementById(`descuento_${procedimientoId}`);
+    const subtotalElement = document.getElementById(`subtotal_${procedimientoId}`);
+    
+    if (!input || !subtotalElement) return;
+    
+    const costo = parseFloat(input.dataset.costo);
+    let descuento = 0;
+    
+    if (checkbox && checkbox.checked) {
+      descuento = parseFloat(input.value) || 0;
+    }
+    
+    const subtotal = Math.max(0, costo - descuento);
+    subtotalElement.textContent = 'C$' + subtotal.toFixed(2);
+  }
+  
+  // Función para actualizar el total general
+  function actualizarTotal() {
+    let total = 0;
+    checkboxesDescuento.forEach(checkbox => {
+      const procedimientoId = checkbox.dataset.procedimientoId;
+      const input = document.getElementById(`descuento_${procedimientoId}`);
+      const costo = parseFloat(input.dataset.costo);
+      let descuento = 0;
+      
+      if (checkbox.checked && input) {
+        descuento = parseFloat(input.value) || 0;
+      }
+      
+      total += Math.max(0, costo - descuento);
+    });
+    montoFinal.textContent = 'C$' + total.toFixed(2);
+  }
+  
+  // Event listeners para los checkboxes
+  checkboxesDescuento.forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      const procedimientoId = this.dataset.procedimientoId;
+      const campoDescuento = document.getElementById(`campo_descuento_${procedimientoId}`);
+      const inputDescuento = document.getElementById(`descuento_${procedimientoId}`);
+      const errorDiv = document.getElementById(`error_${procedimientoId}`);
+      
+      if (this.checked) {
+        campoDescuento.style.display = 'block';
+        if (inputDescuento) {
+          inputDescuento.focus();
+        }
+      } else {
+        campoDescuento.style.display = 'none';
+        if (inputDescuento) {
+          inputDescuento.value = '0';
+        }
+        if (errorDiv) {
+          errorDiv.style.display = 'none';
+        }
+        if (inputDescuento) {
+          inputDescuento.classList.remove('is-invalid');
+        }
+        actualizarSubtotal(procedimientoId);
+        actualizarTotal();
+      }
+    });
+  });
+  
+  // Event listeners para cada campo de descuento
+  descuentoInputs.forEach(input => {
+    // Prevenir letras, negativos y otros caracteres no válidos al presionar teclas
+    input.addEventListener('keydown', function(e) {
+      // Permitir: números, punto decimal, teclas de control (backspace, delete, tab, etc.)
+      const allowedKeys = [
+        'Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
+        'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+        'Home', 'End'
+      ];
+      
+      // Permitir Ctrl/Cmd + A, C, V, X para copiar/pegar
+      if ((e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x'].includes(e.key.toLowerCase())) {
+        return;
+      }
+      
+      // Bloquear letras, 'e', 'E', '+', '-' y otros caracteres no numéricos
+      if (allowedKeys.includes(e.key) || 
+          (e.key >= '0' && e.key <= '9') || 
+          (e.key === '.' && !this.value.includes('.'))) {
+        return;
+      }
+      
+      e.preventDefault();
+    });
+    
+    // Variable para almacenar el timeout de corrección automática
+    let timeoutCorreccion = null;
+    
+    // Validar en tiempo real mientras el usuario escribe
+    input.addEventListener('input', function(e) {
+      const costo = parseFloat(this.dataset.costo) || 0;
+      const procedimientoId = this.dataset.procedimientoId;
+      
+      // Limpiar timeout anterior si existe
+      if (timeoutCorreccion) {
+        clearTimeout(timeoutCorreccion);
+        timeoutCorreccion = null;
+      }
+      
+      // Procesar y limpiar el valor
+      let valor = this.value.replace(/[^0-9.]/g, '');
+      
+      // Limitar a un solo punto decimal
+      const parts = valor.split('.');
+      if (parts.length > 2) {
+        valor = parts[0] + '.' + parts.slice(1).join('');
+      }
+      
+      // Limitar decimales a 2 lugares
+      if (parts.length === 2 && parts[1].length > 2) {
+        valor = parts[0] + '.' + parts[1].substring(0, 2);
+      }
+      
+      // Prevenir valores negativos
+      if (valor.startsWith('-')) {
+        valor = valor.replace(/-/g, '');
+      }
+      
+      this.value = valor;
+      
+      const valorNum = parseFloat(valor) || 0;
+      
+      // VALIDAR Y MOSTRAR ERROR INMEDIATAMENTE
+      validarEnTiempoReal(this);
+      
+      // Si excede el costo, programar corrección automática después de que el usuario deje de escribir
+      if (valorNum > costo) {
+        timeoutCorreccion = setTimeout(() => {
+          this.value = costo.toFixed(2);
+          validarEnTiempoReal(this);
+          actualizarSubtotal(procedimientoId);
+          actualizarTotal();
+        }, 1000); // Esperar 1 segundo después de que el usuario deje de escribir
+      }
+      
+      // Actualizar inmediatamente mientras se escribe
+      actualizarSubtotal(procedimientoId);
+      actualizarTotal();
+    });
+    
+    // Validar también en keyup para máxima responsividad
+    input.addEventListener('keyup', function() {
+      validarEnTiempoReal(this);
+      const procedimientoId = this.dataset.procedimientoId;
+      actualizarSubtotal(procedimientoId);
+      actualizarTotal();
+    });
+    
+    // Validar al perder el foco
+    input.addEventListener('blur', function() {
+      const costo = parseFloat(this.dataset.costo) || 0;
+      const valor = parseFloat(this.value) || 0;
+      
+      // Corregir valor si es necesario
+      if (valor < 0) {
+        this.value = '0';
+      } else if (valor > costo) {
+        this.value = costo.toFixed(2);
+      } else if (this.value && !isNaN(valor)) {
+        // Formatear a 2 decimales si es necesario
+        this.value = valor.toFixed(2);
+      }
+      
+      validarDescuento(this);
+      // Asegurar que los valores se actualicen después de la validación
+      const procedimientoId = this.dataset.procedimientoId;
+      actualizarSubtotal(procedimientoId);
+      actualizarTotal();
+    });
+    
+  });
+  
+  // Validar antes de enviar
+  const form = document.querySelector('form');
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      let hayErrores = false;
+      // Validar todos los campos de descuento visibles
+      descuentoInputs.forEach(input => {
+        const campoDescuento = input.closest('.campo-descuento');
+        // Validar si el campo está visible (el checkbox está marcado)
+        if (campoDescuento && campoDescuento.style.display !== 'none') {
+          if (!validarDescuento(input)) {
+            hayErrores = true;
+          }
+        }
+      });
+      
+      if (hayErrores) {
+        Swal.fire({
+          title: 'Error de Validación',
+          text: 'Por favor, corrige los valores de descuento antes de continuar.',
+          icon: 'error',
+          confirmButtonText: 'Entendido'
+        });
+        return;
+      }
+      
+      // Asegurar que los descuentos de checkboxes no marcados sean 0
+      checkboxesDescuento.forEach(checkbox => {
+        const procedimientoId = checkbox.dataset.procedimientoId;
+        const input = document.getElementById(`descuento_${procedimientoId}`);
+        if (!checkbox.checked && input) {
+          input.value = '0';
+        }
+      });
+      
+      Swal.fire({
+        title: 'Registro de Pago',
+        text: '¿Deseas registrar el pago?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, registrar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          form.submit();
+        }
+      });
+    });
+  }
+});
