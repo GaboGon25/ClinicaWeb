@@ -138,6 +138,22 @@ document.addEventListener('DOMContentLoaded', function() {
       const dd = String(hoy.getDate()).padStart(2, '0');
       const minDate = yyyy + '-' + mm + '-' + dd;
 
+      if (fechaCita < minDate) {
+        e.preventDefault();
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Fecha inválida',
+            text: 'No se puede seleccionar una fecha anterior al día de hoy.',
+            confirmButtonColor: '#198754'
+          });
+        } else {
+          alert('No se puede seleccionar una fecha anterior al día de hoy.');
+        }
+        inputFechaCita.focus();
+        return;
+      }
+
       if (fechaCita === minDate && horaCita) {
         const ahoraHHMM = String(hoy.getHours()).padStart(2, '0') + ':' + String(hoy.getMinutes()).padStart(2, '0');
         if (horaCita < ahoraHHMM) {
@@ -224,8 +240,36 @@ document.addEventListener('DOMContentLoaded', function() {
     inputHora.addEventListener('input', validarHoraEnTiempoReal);
   }
 
+  function validarFechaEnTiempoReal() {
+    if (!inputFecha) return;
+    var fechaSeleccionada = inputFecha.value;
+    if (!fechaSeleccionada) return;
+
+    var hoy = new Date();
+    var fechaHoy = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-' + String(hoy.getDate()).padStart(2, '0');
+
+    if (fechaSeleccionada < fechaHoy) {
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Fecha inválida',
+          text: 'No se puede seleccionar una fecha anterior al día de hoy.',
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000
+        });
+      } else {
+        alert('No se puede seleccionar una fecha anterior al día de hoy.');
+      }
+      inputFecha.value = '';
+      inputFecha.focus();
+    }
+  }
+
   if (inputFecha) {
     inputFecha.addEventListener('change', validarHoraEnTiempoReal);
+    inputFecha.addEventListener('input', validarFechaEnTiempoReal);
   }
 });
 </script>
