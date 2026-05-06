@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1778043371141" clover="3.2.0">
-  <project timestamp="1778043371141" name="All files">
+<coverage generated="1778093470095" clover="3.2.0">
+  <project timestamp="1778093470096" name="All files">
     <metrics statements="267" coveredstatements="189" conditionals="182" coveredconditionals="85" methods="28" coveredmethods="24" elements="477" coveredelements="298" complexity="0" loc="267" ncloc="267" packages="1" files="2" classes="2"/>
     <file name="pago.js" path="C:\Users\Dell\Desktop\ClinicaWeb\ClinicaWeb\JyGDreams\static\JyGDreams\pago.js">
       <metrics statements="158" coveredstatements="124" conditionals="104" coveredconditionals="61" methods="18" coveredmethods="15"/>
