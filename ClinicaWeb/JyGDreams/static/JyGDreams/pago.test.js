@@ -21,7 +21,7 @@ describe("Validaciones del modulo de Descuentos", () => {
             id="descuento_1" 
             class="descuento-input" 
             data-procedimiento-id="1" 
-            data-costo="100" 
+            data-costo="100"                                
             value="0"
           />
         </div>
