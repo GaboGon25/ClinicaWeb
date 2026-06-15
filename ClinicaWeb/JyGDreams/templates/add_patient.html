@@ -3,9 +3,6 @@
 {% load static %}
 
 {% block title %}Agregar Paciente - JyGDreams{% endblock %}
-{% block extra_js %}
-<script src="{% static 'JyGDreams/validando_agregarpx.js' %}"></script>
-{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'JyGDreams/add_patient.css' %}">
 {% endblock %}
@@ -51,7 +48,7 @@
       </div>
       <div class="col-md-6">
         <label class="form-label">Teléfono</label>
-        <input type="text" class="form-control" name="telefono" placeholder="0999999999" required>
+        <input type="tel" class="form-control" name="telefono" placeholder="0999999999" inputmode="numeric" maxlength="8" pattern="[0-9]{8}" required>
       </div>
     </div>
 
@@ -68,33 +65,8 @@
   </form>
 </div>
 
-
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const form = document.querySelector('form');
-  if (form) {
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-      Swal.fire({
-        title: 'Registro de Paciente',
-        text: '¿Deseas guardar el paciente?',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#198754',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, guardar',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          form.submit();
-        }
-      });
-    });
-  }
-});
-</script>
+<script src="{% static 'JyGDreams/validando_agregarpx.js' %}?v=2"></script>
 
 {% if messages %}
 <script>

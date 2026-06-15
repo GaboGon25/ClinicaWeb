@@ -11,23 +11,23 @@ describe("Validaciones del modulo de Paciente", () => {
 
   beforeEach(() => {
     document.body.innerHTML = `
-      <form>
-        <input name="nombre" />
-        <input name="apellido" />
-        <input name="ocupacion" />
-        <input name="telefono" />
-        <input name="fecha_nacimiento" />
-      </form>
+      <div id="formAgregarPaciente" class="form-container">
+        <form>
+          <input name="nombre" />
+          <input name="apellido" />
+          <input name="ocupacion" />
+          <input name="telefono" />
+          <input name="fecha_nacimiento" />
+        </form>
+      </div>
     `;
 
     jest.spyOn(window, "alert").mockImplementation(() => {});
 
-    // Evitar errores si Swal no está definido
     global.Swal = undefined;
 
-    // Importar tu script
-    require('./validando_agregarpx.js');
-    document.dispatchEvent(new Event("DOMContentLoaded"));
+    jest.resetModules();
+    require("./validando_agregarpx.js");
   });
 
   afterEach(() => {
